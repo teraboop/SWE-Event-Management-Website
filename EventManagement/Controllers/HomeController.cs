@@ -21,5 +21,21 @@ namespace EventManagement.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        public IActionResult SetSelectedEvent()
+        {
+            HttpContext.Session.SetString("SelectedEventName", "Spring Fundraiser");
+
+            return RedirectToAction(nameof(SelectedEvent));
+        }
+
+        public IActionResult SelectedEvent()
+        {
+            ViewBag.SelectedEventName =
+                HttpContext.Session.GetString("SelectedEventName")
+                ?? "No event has been selected.";
+
+            return View();
+        }
     }
 }
