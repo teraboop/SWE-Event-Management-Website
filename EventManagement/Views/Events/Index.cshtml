@@ -1,0 +1,80 @@
+﻿@model EventManagement.ViewModels.Events.EventListViewModel
+
+@{
+    ViewData["Title"] = "Events";
+}
+
+<h1>Events</h1>
+
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label asp-for="Filter.InterestCategoryId" class="form-label">Interest</label>
+        <select asp-for="Filter.InterestCategoryId" class="form-select">
+            <option value="">All interests</option>
+            @foreach (var category in Model.InterestCategories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label asp-for="Filter.City" class="form-label">City</label>
+        <input asp-for="Filter.City" class="form-control" />
+    </div>
+
+    <div class="col-md-2">
+        <label asp-for="Filter.StartsAfter" class="form-label">Starts after</label>
+        <input asp-for="Filter.StartsAfter" type="date" class="form-control" />
+    </div>
+
+    <div class="col-md-2">
+        <label asp-for="Filter.MaximumPrice" class="form-label">Maximum price</label>
+        <input asp-for="Filter.MaximumPrice" type="number" min="0" step="0.01" class="form-control" />
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+    </div>
+</form>
+
+@if (Model.Events.Count == 0)
+{
+    <p>No matching upcoming events were found.</p>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var eventCard in Model.Events)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="card-title h5">@eventCard.Title</h2>
+
+                        <p class="card-text">
+                            @eventCard.StartsAt.LocalDateTime.ToString("MMMM d, yyyy h:mm tt")
+                        </p>
+
+                        <p class="card-text">
+                            @eventCard.VenueName, @eventCard.City
+                        </p>
+
+                        <p class="card-text">
+                            @(eventCard.MinimumPrice == 0
+                                ? "Free"
+                                : $"From {eventCard.MinimumPrice:C}")
+                        </p>
+
+                        @if (eventCard.Interests.Count > 0)
+                        {
+                            <p class="card-text">
+                                @string.Join(" · ", eventCard.Interests)
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

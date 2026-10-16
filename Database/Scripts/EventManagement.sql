@@ -365,3 +365,70 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261016172302_AddEventInterestsAndListingFields'
+)
+BEGIN
+    ALTER TABLE [Events] ADD [ExternalWebsiteUrl] nvarchar(2048) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261016172302_AddEventInterestsAndListingFields'
+)
+BEGIN
+    ALTER TABLE [Events] ADD [MinimumPrice] decimal(10,2) NOT NULL DEFAULT 0.0;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261016172302_AddEventInterestsAndListingFields'
+)
+BEGIN
+    CREATE TABLE [EventInterests] (
+        [EventId] int NOT NULL,
+        [InterestCategoryId] int NOT NULL,
+        CONSTRAINT [PK_EventInterests] PRIMARY KEY ([EventId], [InterestCategoryId]),
+        CONSTRAINT [FK_EventInterests_Events_EventId] FOREIGN KEY ([EventId]) REFERENCES [Events] ([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_EventInterests_InterestCategories_InterestCategoryId] FOREIGN KEY ([InterestCategoryId]) REFERENCES [InterestCategories] ([Id]) ON DELETE CASCADE
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261016172302_AddEventInterestsAndListingFields'
+)
+BEGIN
+    CREATE INDEX [IX_Events_City] ON [Events] ([City]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261016172302_AddEventInterestsAndListingFields'
+)
+BEGIN
+    CREATE INDEX [IX_Events_Status_StartsAt] ON [Events] ([Status], [StartsAt]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261016172302_AddEventInterestsAndListingFields'
+)
+BEGIN
+    CREATE INDEX [IX_EventInterests_InterestCategoryId] ON [EventInterests] ([InterestCategoryId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261016172302_AddEventInterestsAndListingFields'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261016172302_AddEventInterestsAndListingFields', N'10.0.12');
+END;
+
+COMMIT;
+GO
+

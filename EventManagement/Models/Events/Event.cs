@@ -33,4 +33,10 @@ public class Event
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public ICollection<SavedEvent> SavedByUsers { get; set; } = [];
+
+    public decimal MinimumPrice { get; set; }
+
+    public string? ExternalWebsiteUrl { get; set; }
+
+    public ICollection<EventInterest> Interests { get; set; } = [];
 }
