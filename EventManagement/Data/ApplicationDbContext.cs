@@ -18,6 +18,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<SavedEvent> SavedEvents => Set<SavedEvent>();
 
+    public DbSet<EventInterest> EventInterests => Set<EventInterest>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -86,6 +88,20 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(@event => @event.PostalCode)
                 .HasMaxLength(20);
 
+            entity.Property(@event => @event.MinimumPrice)
+                .HasPrecision(10, 2);
+
+            entity.Property(@event => @event.ExternalWebsiteUrl)
+                .HasMaxLength(2048);
+
+            entity.HasIndex(@event => new
+            {
+                @event.Status,
+                @event.StartsAt
+            });
+
+            entity.HasIndex(@event => @event.City);
+
             entity.HasOne(@event => @event.Organizer)
                 .WithMany()
                 .HasForeignKey(@event => @event.OrganizerId)
@@ -95,6 +111,29 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany(category => category.Events)
                 .HasForeignKey(@event => @event.EventCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<EventInterest>(entity =>
+        {
+            entity.ToTable("EventInterests");
+
+            entity.HasKey(eventInterest => new
+            {
+                eventInterest.EventId,
+                eventInterest.InterestCategoryId
+            });
+
+            entity.HasOne(eventInterest => eventInterest.Event)
+                .WithMany(@event => @event.Interests)
+                .HasForeignKey(eventInterest => eventInterest.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(eventInterest => eventInterest.InterestCategory)
+                .WithMany(category => category.EventInterests)
+                .HasForeignKey(eventInterest => eventInterest.InterestCategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(eventInterest => eventInterest.InterestCategoryId);
         });
 
         builder.Entity<SavedEvent>(entity =>

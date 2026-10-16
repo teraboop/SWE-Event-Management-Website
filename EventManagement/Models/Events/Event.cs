@@ -34,7 +34,9 @@ public class Event
 
     public ICollection<SavedEvent> SavedByUsers { get; set; } = [];
 
-    public float MinimumPrice { get; set; } = 0.0f;
+    public decimal MinimumPrice { get; set; }
 
-    public string ExternalWebsiteUrl { get; set; } = string.Empty;
+    public string? ExternalWebsiteUrl { get; set; }
+
+    public ICollection<EventInterest> Interests { get; set; } = [];
 }
