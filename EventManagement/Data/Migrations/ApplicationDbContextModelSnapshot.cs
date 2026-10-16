@@ -121,6 +121,14 @@ namespace EventManagement.Data.Migrations
                     b.Property<int>("EventCategoryId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ExternalWebsiteUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<decimal>("MinimumPrice")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
                     b.Property<string>("OrganizerId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -147,9 +155,13 @@ namespace EventManagement.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("City");
+
                     b.HasIndex("EventCategoryId");
 
                     b.HasIndex("OrganizerId");
+
+                    b.HasIndex("Status", "StartsAt");
 
                     b.ToTable("Events", (string)null);
                 });
@@ -173,6 +185,21 @@ namespace EventManagement.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("EventCategories", (string)null);
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Events.EventInterest", b =>
+                {
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InterestCategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("EventId", "InterestCategoryId");
+
+                    b.HasIndex("InterestCategoryId");
+
+                    b.ToTable("EventInterests", (string)null);
                 });
 
             modelBuilder.Entity("EventManagement.Models.Events.SavedEvent", b =>
@@ -385,6 +412,25 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("Organizer");
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Events.EventInterest", b =>
+                {
+                    b.HasOne("EventManagement.Models.Events.Event", "Event")
+                        .WithMany("Interests")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EventManagement.Models.Profile.InterestCategory", "InterestCategory")
+                        .WithMany("EventInterests")
+                        .HasForeignKey("InterestCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("InterestCategory");
+                });
+
             modelBuilder.Entity("EventManagement.Models.Events.SavedEvent", b =>
                 {
                     b.HasOne("EventManagement.Models.Events.Event", "Event")
@@ -483,6 +529,8 @@ namespace EventManagement.Data.Migrations
 
             modelBuilder.Entity("EventManagement.Models.Events.Event", b =>
                 {
+                    b.Navigation("Interests");
+
                     b.Navigation("SavedByUsers");
                 });
 
@@ -493,6 +541,8 @@ namespace EventManagement.Data.Migrations
 
             modelBuilder.Entity("EventManagement.Models.Profile.InterestCategory", b =>
                 {
+                    b.Navigation("EventInterests");
+
                     b.Navigation("UserInterests");
                 });
 #pragma warning restore 612, 618
