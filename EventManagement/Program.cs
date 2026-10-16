@@ -1,4 +1,5 @@
 using EventManagement.Data;
+using EventManagement.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,6 +12,8 @@ var connectionString =
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+builder.Services.AddScoped<EventDiscoveryService>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
