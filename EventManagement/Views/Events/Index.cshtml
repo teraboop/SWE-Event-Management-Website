@@ -72,9 +72,46 @@ else
                                 @string.Join(" · ", eventCard.Interests)
                             </p>
                         }
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="button"
+                                    class="btn btn-primary event-summary-button"
+                                    data-summary-url="@Url.Action("Summary", "Events", new { id = eventCard.Id })">
+                                Quick View
+                            </button>
+
+                            <a asp-action="Details"
+                               asp-route-id="@eventCard.Id"
+                               class="btn btn-outline-secondary">
+                                Details
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         }
     </div>
+    <div id="event-summary-modal-host"></div>
+
+    @section Scripts {
+        <script>
+            document.querySelectorAll(".event-summary-button").forEach(button => {
+                button.addEventListener("click", async () => {
+                    const response = await fetch(button.dataset.summaryUrl);
+
+                    if (!response.ok) {
+                        alert("Unable to load the event summary.");
+                        return;
+                    }
+
+                    const modalHost = document.getElementById("event-summary-modal-host");
+                    modalHost.innerHTML = await response.text();
+
+                    const modalElement = document.getElementById("eventSummaryModal");
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+
+                    modal.show();
+                });
+            });
+        </script>
+    }
 }

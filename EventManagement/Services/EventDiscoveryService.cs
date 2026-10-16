@@ -120,4 +120,32 @@ public class EventDiscoveryService
             Events = events
         };
     }
+    public async Task<EventDetailsViewModel?> GetEventDetailsAsync(int id)
+    {
+        return await _context.Events
+            .AsNoTracking()
+            .Where(@event =>
+                @event.Id == id &&
+                @event.Status == EventStatus.Published)
+            .Select(@event => new EventDetailsViewModel
+            {
+                Id = @event.Id,
+                Title = @event.Title,
+                Description = @event.Description,
+                StartsAt = @event.StartsAt,
+                EndsAt = @event.EndsAt,
+                VenueName = @event.VenueName,
+                City = @event.City,
+                PostalCode = @event.PostalCode,
+                MinimumPrice = @event.MinimumPrice,
+                ExternalWebsiteUrl = @event.ExternalWebsiteUrl,
+                EventCategoryName = @event.EventCategory.Name,
+                OrganizerName = @event.Organizer.UserName ?? "Event organizer",
+                Interests = @event.Interests
+                    .OrderBy(interest => interest.InterestCategory.Name)
+                    .Select(interest => interest.InterestCategory.Name)
+                    .ToList()
+            })
+            .SingleOrDefaultAsync();
+    }
 }

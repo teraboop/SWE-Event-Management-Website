@@ -31,8 +31,29 @@ public class EventsController : Controller
         return View(model);
     }
 
-    public IActionResult Details(int id)
+    [HttpGet]
+    public async Task<IActionResult> Details(int id)
     {
-        return View();
+        var model = await _eventDiscoveryService.GetEventDetailsAsync(id);
+
+        if (model is null)
+        {
+            return NotFound();
+        }
+
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Summary(int id)
+    {
+        var model = await _eventDiscoveryService.GetEventDetailsAsync(id);
+
+        if (model is null)
+        {
+            return NotFound();
+        }
+
+        return PartialView("_EventSummaryModal", model);
     }
 }

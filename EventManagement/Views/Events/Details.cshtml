@@ -1,5 +1,62 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model EventManagement.ViewModels.Events.EventDetailsViewModel
+
 @{
+    ViewData["Title"] = Model.Title;
+}
+
+<a asp-action="Index" class="btn btn-outline-secondary mb-3">Back to Events</a>
+
+<h1>@Model.Title</h1>
+
+<p class="text-muted">
+    @Model.StartsAt.LocalDateTime.ToString("MMMM d, yyyy h:mm tt")
+    to
+    @Model.EndsAt.LocalDateTime.ToString("h:mm tt")
+</p>
+
+<p>
+    <strong>Location:</strong>
+    @Model.VenueName, @Model.City
+    @if (!string.IsNullOrWhiteSpace(Model.PostalCode))
+    {
+        <span>@Model.PostalCode</span>
+    }
+</p>
+
+<p>
+    <strong>Category:</strong> @Model.EventCategoryName
+</p>
+
+<p>
+    <strong>Organizer:</strong> @Model.OrganizerName
+</p>
+
+<p>
+    <strong>Price:</strong>
+    @(Model.MinimumPrice == 0 ? "Free" : $"From {Model.MinimumPrice:C}")
+</p>
+
+@if (Model.Interests.Count > 0)
+{
+    <p>
+        <strong>Interests:</strong>
+        @string.Join(" · ", Model.Interests)
+    </p>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Description))
+{
+    <hr />
+    <h2 class="h4">About this event</h2>
+    <p>@Model.Description</p>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.ExternalWebsiteUrl))
+{
+    <a href="@Model.ExternalWebsiteUrl"
+       class="btn btn-outline-primary"
+       target="_blank"
+       rel="noopener noreferrer">
+        Visit Event Website
+    </a>
 }
