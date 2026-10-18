@@ -44,36 +44,13 @@
 }
 else
 {
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <h2 class="visually-hidden">Results</h2>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
         @foreach (var eventCard in Model.Events)
         {
             <div class="col">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="card-title h5">@eventCard.Title</h2>
-
-                        <p class="card-text">
-                            @eventCard.StartsAt.LocalDateTime.ToString("MMMM d, yyyy h:mm tt")
-                        </p>
-
-                        <p class="card-text">
-                            @eventCard.VenueName, @eventCard.City
-                        </p>
-
-                        <p class="card-text">
-                            @(eventCard.MinimumPrice == 0
-                                ? "Free"
-                                : $"From {eventCard.MinimumPrice:C}")
-                        </p>
-
-                        @if (eventCard.Interests.Count > 0)
-                        {
-                            <p class="card-text">
-                                @string.Join(" · ", eventCard.Interests)
-                            </p>
-                        }
-                    </div>
-                </div>
+                <partial name="_EventCard" model="eventCard" />
             </div>
         }
     </div>
