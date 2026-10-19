@@ -50,8 +50,71 @@ else
         @foreach (var eventCard in Model.Events)
         {
             <div class="col">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="card-title h5">@eventCard.Title</h2>
+
+                        <p class="card-text">
+                            @eventCard.StartsAt.LocalDateTime.ToString("MMMM d, yyyy h:mm tt")
+                        </p>
+
+                        <p class="card-text">
+                            @eventCard.VenueName, @eventCard.City
+                        </p>
+
+                        <p class="card-text">
+                            @(eventCard.MinimumPrice == 0
+                                ? "Free"
+                                : $"From {eventCard.MinimumPrice:C}")
+                        </p>
+
+                        @if (eventCard.Interests.Count > 0)
+                        {
+                            <p class="card-text">
+                                @string.Join(" · ", eventCard.Interests)
+                            </p>
+                        }
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="button"
+                                    class="btn btn-primary event-summary-button"
+                                    data-summary-url="@Url.Action("Summary", "Events", new { id = eventCard.Id })">
+                                Quick View
+                            </button>
+
+                            <a asp-action="Details"
+                               asp-route-id="@eventCard.Id"
+                               class="btn btn-outline-secondary">
+                                Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 <partial name="_EventCard" model="eventCard" />
             </div>
         }
     </div>
+    <div id="event-summary-modal-host"></div>
+
+    @section Scripts {
+        <script>
+            document.querySelectorAll(".event-summary-button").forEach(button => {
+                button.addEventListener("click", async () => {
+                    const response = await fetch(button.dataset.summaryUrl);
+
+                    if (!response.ok) {
+                        alert("Unable to load the event summary.");
+                        return;
+                    }
+
+                    const modalHost = document.getElementById("event-summary-modal-host");
+                    modalHost.innerHTML = await response.text();
+
+                    const modalElement = document.getElementById("eventSummaryModal");
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+
+                    modal.show();
+                });
+            });
+        </script>
+    }
 }

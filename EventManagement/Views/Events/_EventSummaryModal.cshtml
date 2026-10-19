@@ -1,5 +1,64 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model EventManagement.ViewModels.Events.EventDetailsViewModel
+
+<div class="modal fade" id="eventSummaryModal" tabindex="-1" aria-labelledby="eventSummaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="eventSummaryModalLabel">@Model.Title</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <p>
+                    <strong>Date:</strong>
+                    @Model.StartsAt.LocalDateTime.ToString("MMMM d, yyyy h:mm tt")
+                </p>
+
+                <p>
+                    <strong>Location:</strong>
+                    @Model.VenueName, @Model.City
+                </p>
+
+                <p>
+                    <strong>Price:</strong>
+                    @(Model.MinimumPrice == 0 ? "Free" : $"From {Model.MinimumPrice:C}")
+                </p>
+
+                @if (Model.Interests.Count > 0)
+                {
+                    <p>
+                        <strong>Interests:</strong>
+                        @string.Join(" · ", Model.Interests)
+                    </p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <p>@Model.Description</p>
+                }
+            </div>
+
+            <div class="modal-footer">
+                <a asp-action="Details"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-primary">
+                    View Full Details
+                </a>
+
+                @if (!string.IsNullOrWhiteSpace(Model.ExternalWebsiteUrl))
+                {
+                    <a href="@Model.ExternalWebsiteUrl"
+                       class="btn btn-outline-primary"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        Visit Event Website
+                    </a>
+                }
+
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
