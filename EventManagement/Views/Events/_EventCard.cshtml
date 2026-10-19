@@ -1,0 +1,33 @@
+@model EventManagement.ViewModels.Events.EventCardViewModel
+
+<article class="card event-card h-100">
+    <div class="card-body d-flex flex-column">
+        <p class="event-card-date mb-1">
+            @Model.StartsAt.LocalDateTime.ToString("ddd, MMM d, yyyy · h:mm tt")
+        </p>
+
+        <h3 class="card-title h5">
+            <a class="stretched-link" asp-controller="Events" asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a>
+        </h3>
+
+        <p class="card-text text-body-secondary mb-3">
+            @Model.VenueName, @Model.City
+        </p>
+
+        @if (Model.Interests.Count > 0)
+        {
+            <ul class="event-card-tags list-unstyled mb-3">
+                @foreach (var interest in Model.Interests)
+                {
+                    <li>@interest</li>
+                }
+            </ul>
+        }
+
+        <p class="event-card-price mt-auto mb-0">
+            @(Model.MinimumPrice == 0
+                ? "Free"
+                : $"From {Model.MinimumPrice:C}")
+        </p>
+    </div>
+</article>

@@ -1,8 +1,79 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using Microsoft.AspNetCore.Identity
+@using EventManagement.Data
+@model EventManagement.ViewModels.Home.HomeIndexViewModel
+@inject SignInManager<ApplicationUser> SignInManager
+
+@{
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@section Hero {
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero-title">Find your next convention</h1>
+            <p class="hero-lead">
+                Comic cons, anime and gaming conventions, fan expos and more. Discover the next con near you.
+            </p>
+
+            <form class="hero-search" method="get" asp-controller="Events" asp-action="Index" role="search">
+                <div class="row g-2">
+                    <div class="col-md-5">
+                        <label for="hero-city" class="visually-hidden">City</label>
+                        <input id="hero-city" name="Filter.City" class="form-control form-control-lg" placeholder="City" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="hero-interest" class="visually-hidden">Interest</label>
+                        <select id="hero-interest" name="Filter.InterestCategoryId" class="form-select form-select-lg">
+                            <option value="">Any interest</option>
+                            @foreach (var category in Model.InterestCategories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Search events</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+}
+
+<section class="home-section" aria-labelledby="popular-heading">
+    <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-3">
+        <h2 id="popular-heading" class="section-title">Popular upcoming events</h2>
+        <a asp-controller="Events" asp-action="Index">See all events &rarr;</a>
+    </div>
+
+    @if (Model.PopularEvents.Count == 0)
+    {
+        <div class="empty-state">
+            <p class="mb-0">No upcoming events yet. Check back soon.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+            @foreach (var eventCard in Model.PopularEvents)
+            {
+                <div class="col">
+                    <partial name="~/Views/Events/_EventCard.cshtml" model="eventCard" />
+                </div>
+            }
+        </div>
+    }
+</section>
+
+@if (!SignInManager.IsSignedIn(User))
+{
+    <section class="home-section cta" aria-labelledby="cta-heading">
+        <div>
+            <h2 id="cta-heading" class="h3 mb-2">Never miss a con you'll love</h2>
+            <p class="mb-0">Create an account to save conventions and get recommendations based on your fandoms.</p>
+        </div>
+        <a class="btn btn-light btn-lg" asp-area="Identity" asp-page="/Account/Register">Sign up</a>
+    </section>
+}

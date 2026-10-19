@@ -44,7 +44,9 @@
 }
 else
 {
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <h2 class="visually-hidden">Results</h2>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
         @foreach (var eventCard in Model.Events)
         {
             <div class="col">
@@ -87,6 +89,7 @@ else
                         </div>
                     </div>
                 </div>
+                <partial name="_EventCard" model="eventCard" />
             </div>
         }
     </div>

@@ -16,7 +16,8 @@ public class EventDiscoveryService
 
     public async Task<EventListViewModel> GetEventsAsync(
         EventFilterViewModel filter,
-        string? userId)
+        string? userId,
+        int? limit = null)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -88,6 +89,11 @@ public class EventDiscoveryService
             query = query
                 .OrderByDescending(@event => @event.SavedByUsers.Count)
                 .ThenBy(@event => @event.StartsAt);
+        }
+
+        if (limit.HasValue)
+        {
+            query = query.Take(limit.Value);
         }
 
         var events = await query
