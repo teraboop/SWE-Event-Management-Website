@@ -1,6 +1,7 @@
 ﻿using EventManagement.Data;
 using EventManagement.Models.Profile;
 using EventManagement.ViewModels.Profile;
+using EventManagement.Models.Events;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,55 @@ public class ProfileController : Controller
     {
         _dbContext = dbContext;
         _userManager = userManager;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        var interests = await _dbContext.UserInterests
+            .AsNoTracking()
+            .Where(userInterest => userInterest.UserId == user.Id)
+            .OrderBy(userInterest => userInterest.InterestCategory.Name)
+            .Select(userInterest => userInterest.InterestCategory.Name)
+            .ToListAsync();
+
+        var savedEvents = await _dbContext.SavedEvents
+            .AsNoTracking()
+            .Where(savedEvent =>
+                savedEvent.UserId == user.Id &&
+                savedEvent.Event.Status == EventStatus.Published &&
+                savedEvent.Event.EndsAt >= now)
+            .OrderBy(savedEvent => savedEvent.Event.StartsAt)
+            .Select(savedEvent => new SavedEventSummaryViewModel
+            {
+                EventId = savedEvent.EventId,
+                Title = savedEvent.Event.Title,
+                StartsAt = savedEvent.Event.StartsAt,
+                VenueName = savedEvent.Event.VenueName,
+                City = savedEvent.Event.City
+            })
+            .ToListAsync();
+
+        var model = new ProfileOverviewViewModel
+        {
+            DisplayName = string.IsNullOrWhiteSpace(user.DisplayName)
+                ? user.UserName ?? "Your profile"
+                : user.DisplayName,
+            City = user.City,
+            PostalCode = user.PostalCode,
+            Interests = interests,
+            SavedEvents = savedEvents
+        };
+
+        return View(model);
     }
 
     [HttpGet]

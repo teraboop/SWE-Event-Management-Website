@@ -1,0 +1,77 @@
+﻿@model EventManagement.ViewModels.Profile.ProfileOverviewViewModel
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<h1>@Model.DisplayName</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.City) ||
+     !string.IsNullOrWhiteSpace(Model.PostalCode))
+{
+    <p class="text-muted">
+        @Model.City
+        @if (!string.IsNullOrWhiteSpace(Model.PostalCode))
+        {
+            <span> @Model.PostalCode</span>
+        }
+    </p>
+}
+
+<section class="mb-4" aria-labelledby="interests-heading">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 id="interests-heading">My interests</h2>
+        <a asp-controller="Profile"
+           asp-action="Interests"
+           class="btn btn-outline-primary btn-sm">
+            Edit interests
+        </a>
+    </div>
+
+    @if (Model.Interests.Count == 0)
+    {
+        <p>You haven’t selected any interests yet.</p>
+    }
+    else
+    {
+        <ul class="list-inline">
+            @foreach (var interest in Model.Interests)
+            {
+                <li class="list-inline-item">
+                    <span class="badge text-bg-secondary">@interest</span>
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+<section aria-labelledby="saved-events-heading">
+    <h2 id="saved-events-heading">Saved upcoming events</h2>
+
+    @if (Model.SavedEvents.Count == 0)
+    {
+        <p>You don’t have any saved upcoming events.</p>
+        <a asp-controller="Events" asp-action="Index">Browse events</a>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var savedEvent in Model.SavedEvents)
+            {
+                <article class="list-group-item">
+                    <h3 class="h5">
+                        <a asp-controller="Events"
+                           asp-action="Details"
+                           asp-route-id="@savedEvent.EventId">
+                            @savedEvent.Title
+                        </a>
+                    </h3>
+                    <p class="mb-0">
+                        @savedEvent.StartsAt.ToString("ddd, MMM d, yyyy h:mm tt zzz")
+                        · @savedEvent.VenueName, @savedEvent.City
+                    </p>
+                </article>
+            }
+        </div>
+    }
+</section>
