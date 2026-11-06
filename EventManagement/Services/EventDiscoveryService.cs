@@ -110,7 +110,9 @@ public class EventDiscoveryService
                 Interests = @event.Interests
                     .OrderBy(interest => interest.InterestCategory.Name)
                     .Select(interest => interest.InterestCategory.Name)
-                    .ToList()
+                    .ToList(),
+                IsSaved = userId != null &&
+                    @event.SavedByUsers.Any(savedEvent => savedEvent.UserId == userId)
             })
             .ToListAsync();
 
@@ -126,7 +128,7 @@ public class EventDiscoveryService
             Events = events
         };
     }
-    public async Task<EventDetailsViewModel?> GetEventDetailsAsync(int id)
+    public async Task<EventDetailsViewModel?> GetEventDetailsAsync(int id, string? userId = null)
     {
         return await _context.Events
             .AsNoTracking()
@@ -150,7 +152,9 @@ public class EventDiscoveryService
                 Interests = @event.Interests
                     .OrderBy(interest => interest.InterestCategory.Name)
                     .Select(interest => interest.InterestCategory.Name)
-                    .ToList()
+                    .ToList(),
+                IsSaved = userId != null &&
+                    @event.SavedByUsers.Any(savedEvent => savedEvent.UserId == userId),
             })
             .SingleOrDefaultAsync();
     }

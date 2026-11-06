@@ -39,6 +39,15 @@
             </div>
 
             <div class="modal-footer">
+
+                <partial name="_SaveEventButton"
+                         model="@(new EventManagement.ViewModels.Events.SaveEventButtonViewModel
+                         {
+                             EventId = Model.Id,
+                             IsSaved = Model.IsSaved,
+                             ReturnUrl = Model.ReturnUrl
+                         })" />
+
                 <a asp-action="Details"
                    asp-route-id="@Model.Id"
                    class="btn btn-primary">

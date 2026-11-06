@@ -22,6 +22,10 @@ public class EventDetailsViewModel
 
     public string? ExternalWebsiteUrl { get; set; }
 
+    public bool IsSaved { get; set; }
+
+    public string ReturnUrl { get; set; } = "/Events";
+
     public string EventCategoryName { get; set; } = string.Empty;
 
     public string OrganizerName { get; set; } = string.Empty;

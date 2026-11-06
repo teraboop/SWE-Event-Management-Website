@@ -18,5 +18,7 @@ public class EventCardViewModel
 
     public string? ExternalWebsiteUrl { get; set; }
 
+    public bool IsSaved { get; set; }
+
     public IReadOnlyList<string> Interests { get; set; } = [];
 }
