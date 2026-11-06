@@ -24,6 +24,63 @@ public class ProfileController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Edit()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        var model = new ProfileEditViewModel
+        {
+            DisplayName = user.DisplayName ?? user.UserName ?? string.Empty,
+            City = user.City,
+            PostalCode = user.PostalCode
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(ProfileEditViewModel model)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        user.DisplayName = model.DisplayName.Trim();
+        user.City = string.IsNullOrWhiteSpace(model.City)
+            ? null
+            : model.City.Trim();
+        user.PostalCode = string.IsNullOrWhiteSpace(model.PostalCode)
+            ? null
+            : model.PostalCode.Trim();
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(model);
+        }
+
+        TempData["StatusMessage"] = "Your profile has been updated.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
         var user = await _userManager.GetUserAsync(User);
