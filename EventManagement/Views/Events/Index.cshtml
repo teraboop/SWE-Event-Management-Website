@@ -81,15 +81,15 @@ else
                                 Quick View
                             </button>
 
-                            <a asp-action="Details"
+                            <a asp-controller="Events"
+                               asp-action="Details"
                                asp-route-id="@eventCard.Id"
-                               class="btn btn-outline-secondary">
-                                Details
+                               class="btn btn-primary">
+                                View full details
                             </a>
                         </div>
                     </div>
                 </div>
-                <partial name="_EventCard" model="eventCard" />
             </div>
         }
     </div>
