@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Events";
+    var eventListReturnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
 }
 
 <h1>Events</h1>
@@ -87,6 +88,14 @@ else
                                class="btn btn-primary">
                                 View full details
                             </a>
+
+                            <partial name="_SaveEventButton"
+                                     model="@(new EventManagement.ViewModels.Events.SaveEventButtonViewModel
+                                     {
+                                         EventId = eventCard.Id,
+                                         IsSaved = eventCard.IsSaved,
+                                         ReturnUrl = eventListReturnUrl
+                                     })" />
                         </div>
                     </div>
                 </div>
