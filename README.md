@@ -25,5 +25,5 @@
 | 11. AI Assistant Chatbot | Not implemented | No |
 | 12. AI Event and Vendor Recommendations | Partial| Yes |
 | 13. Event Reviews and Ratings | Not implemented | No |
-| 14. Personal Event Calendar | Not implemented | Saved-event schema only |
+| 14. Personal Event Calendar | Implemented | Yes |
 | 15. Event Announcement System | Not implemented | No |
