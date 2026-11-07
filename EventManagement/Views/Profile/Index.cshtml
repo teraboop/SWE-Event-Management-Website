@@ -48,6 +48,12 @@
 <section aria-labelledby="saved-events-heading">
     <h2 id="saved-events-heading">Saved upcoming events</h2>
 
+    <a asp-controller="Profile"
+       asp-action="Calendar"
+       class="btn btn-outline-primary btn-sm">
+        Open calendar
+    </a>
+
     @if (Model.SavedEvents.Count == 0)
     {
         <p>You don’t have any saved upcoming events.</p>

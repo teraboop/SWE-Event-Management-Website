@@ -24,6 +24,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<ApplicationUser>().Property(user => user.TimeZoneId).HasMaxLength(100);
+
         builder.Entity<InterestCategory>(entity =>
         {
             entity.ToTable("InterestCategories");
