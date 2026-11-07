@@ -2,6 +2,29 @@
 
 namespace EventManagement.Models.Events;
 
+
+public enum TicketSalesMode
+{
+    Unconfigured = 0,
+    OnPlatform = 1,
+    External = 2,
+    NotRequired = 3
+}
+
+public class EventTicketType
+{
+    public int Id { get; set; }
+    public int EventId { get; set; }
+    public Event Event { get; set; } = null!;
+    public required string Name { get; set; }
+    public decimal Price { get; set; }
+    public int QuantityAvailable { get; set; }
+    public DateTimeOffset SalesStartAt { get; set; }
+    public DateTimeOffset SalesEndAt { get; set; }
+    public bool IsEnabled { get; set; } = true;
+
+}
+
 public class Event
 {
     public int Id { get; set; }
@@ -35,6 +58,12 @@ public class Event
     public ICollection<SavedEvent> SavedByUsers { get; set; } = [];
 
     public decimal MinimumPrice { get; set; }
+
+    public TicketSalesMode TicketSalesMode { get; set; } = TicketSalesMode.Unconfigured;
+
+    public string? ExternalTicketingUrl { get; set; }
+
+    public ICollection<EventTicketType> TicketTypes { get; set; } = [];
 
     public string? ExternalWebsiteUrl { get; set; }
 

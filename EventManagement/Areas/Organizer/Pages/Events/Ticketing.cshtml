@@ -1,0 +1,48 @@
+﻿@page "{id:int}"
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using EventManagement.Models.Events
+@model EventManagement.Areas.Organizer.Pages.Events.TicketingModel
+
+@{
+    ViewData["Title"] = "Ticket settings";
+}
+
+<h1>Ticket settings for @Model.EventTitle</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+}
+
+<form method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Input.TicketSalesMode" class="form-label">Ticket sales option</label>
+        <select asp-for="Input.TicketSalesMode" class="form-select">
+            <option value="@TicketSalesMode.Unconfigured">Not configured</option>
+            <option value="@TicketSalesMode.OnPlatform">Sell tickets on this platform</option>
+            <option value="@TicketSalesMode.External">Use an external ticketing site</option>
+            <option value="@TicketSalesMode.NotRequired">Tickets are not required</option>
+        </select>
+        <span asp-validation-for="Input.TicketSalesMode" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.ExternalTicketingUrl" class="form-label">External ticket link</label>
+        <input asp-for="Input.ExternalTicketingUrl"
+               type="url"
+               class="form-control"
+               maxlength="2048"
+               placeholder="https://example.com/tickets" />
+        <span asp-validation-for="Input.ExternalTicketingUrl" class="text-danger"></span>
+        <div class="form-text">Required only when using an external ticketing site.</div>
+    </div>
+
+    <p class="text-muted">
+        On-platform ticket sales still need ticket types and checkout to be implemented.
+    </p>
+
+    <button type="submit" class="btn btn-primary">Save ticket settings</button>
+</form>

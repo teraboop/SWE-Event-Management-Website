@@ -1,6 +1,63 @@
-﻿@{
+﻿@model EventManagement.ViewModels.Admin.AdminIndexViewModel
+
+@{
     ViewData["Title"] = "Admin";
 }
 
 <h1>Admin area</h1>
 <p>Only users assigned the Admin role can access this page.</p>
+
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-info" role="status">@statusMessage</div>
+}
+
+<h2 class="h4 mt-4">Organizer accounts</h2>
+<p>Grant or remove the Organizer role for existing accounts.</p>
+
+@if (Model.Users.Count == 0)
+{
+    <p>No user accounts were found.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">User</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Organizer access</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var account in Model.Users)
+                {
+                    <tr>
+                        <td>
+                            <div>@(string.IsNullOrWhiteSpace(account.DisplayName) ? account.UserName : account.DisplayName)</div>
+                            @if (!string.IsNullOrWhiteSpace(account.DisplayName) &&
+                                 !string.IsNullOrWhiteSpace(account.UserName))
+                            {
+                                <small class="text-muted">@account.UserName</small>
+                            }
+                        </td>
+                        <td>@account.Email</td>
+                        <td>@(account.IsOrganizer ? "Organizer" : "Not an organizer")</td>
+                        <td class="text-end">
+                            <form asp-controller="Admin" asp-action="SetOrganizerRole" method="post">
+                                <input type="hidden" name="userId" value="@account.Id" />
+                                <input type="hidden" name="makeOrganizer" value="@(!account.IsOrganizer)" />
+                                <button type="submit"
+                                        class="btn btn-sm @(account.IsOrganizer ? "btn-outline-danger" : "btn-outline-primary")">
+                                    @(account.IsOrganizer ? "Remove Organizer" : "Make Organizer")
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

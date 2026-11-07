@@ -73,12 +73,12 @@ namespace EventManagement.Data.Migrations
                     b.Property<string>("PostalCode")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("TimeZoneId")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -125,6 +125,10 @@ namespace EventManagement.Data.Migrations
                     b.Property<int>("EventCategoryId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ExternalTicketingUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
                     b.Property<string>("ExternalWebsiteUrl")
                         .HasMaxLength(2048)
                         .HasColumnType("nvarchar(2048)");
@@ -145,6 +149,9 @@ namespace EventManagement.Data.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TicketSalesMode")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -204,6 +211,57 @@ namespace EventManagement.Data.Migrations
                     b.HasIndex("InterestCategoryId");
 
                     b.ToTable("EventInterests", (string)null);
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Events.EventTicketType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("QuantityAvailable")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("SalesEndAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("SalesStartAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId", "IsEnabled");
+
+                    b.HasIndex("EventId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("EventTicketTypes", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_EventTicketTypes_Price_NonNegative", "[Price] >= 0");
+
+                            t.HasCheckConstraint("CK_EventTicketTypes_QuantityAvailable_NonNegative", "[QuantityAvailable] >= 0");
+
+                            t.HasCheckConstraint("CK_EventTicketTypes_SalesWindow", "[SalesEndAt] > [SalesStartAt]");
+                        });
                 });
 
             modelBuilder.Entity("EventManagement.Models.Events.SavedEvent", b =>
@@ -435,6 +493,17 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("InterestCategory");
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Events.EventTicketType", b =>
+                {
+                    b.HasOne("EventManagement.Models.Events.Event", "Event")
+                        .WithMany("TicketTypes")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+                });
+
             modelBuilder.Entity("EventManagement.Models.Events.SavedEvent", b =>
                 {
                     b.HasOne("EventManagement.Models.Events.Event", "Event")
@@ -536,6 +605,8 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("Interests");
 
                     b.Navigation("SavedByUsers");
+
+                    b.Navigation("TicketTypes");
                 });
 
             modelBuilder.Entity("EventManagement.Models.Events.EventCategory", b =>
