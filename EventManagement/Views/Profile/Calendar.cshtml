@@ -25,7 +25,7 @@
     </nav>
 </div>
 
-<p>Events shown here are saved events. Times are displayed in UTC.</p>
+<p>Times shown in @Model.TimeZoneId.</p>
 
 <div class="table-responsive">
     <table class="table table-bordered">
@@ -57,7 +57,7 @@
                                    class="d-block small mb-1">
                                     @if (DateOnly.FromDateTime(calendarEvent.StartsAt.UtcDateTime) == day.Date)
                                     {
-                                        <span>@calendarEvent.StartsAt.UtcDateTime.ToString("h:mm tt") UTC</span>
+                                        <span>@calendarEvent.StartsAt.ToString("h:mm tt")</span>
                                     }
                                     else
                                     {

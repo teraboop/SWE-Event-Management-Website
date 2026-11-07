@@ -12,6 +12,8 @@ public class ApplicationUser : IdentityUser
 
     public string? PostalCode { get; set; }
 
+    public string? TimeZoneId { get; set; }
+
     public ICollection<UserInterest> Interests { get; set; } = [];
 
     public ICollection<SavedEvent> SavedEvents { get; set; } = [];

@@ -33,9 +33,12 @@ public class ProfileController : Controller
             return Challenge();
         }
 
-        var utcNow = DateTimeOffset.UtcNow;
-        var selectedYear = year ?? utcNow.Year;
-        var selectedMonth = month ?? utcNow.Month;
+        var timeZone = ResolveTimeZone(user.TimeZoneId);
+
+        // Default to the current month in the user's time zone, not the server's.
+        var localNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
+        var selectedYear = year ?? localNow.Year;
+        var selectedMonth = month ?? localNow.Month;
 
         if (selectedYear < 1900 || selectedYear > 9998 ||
             selectedMonth < 1 || selectedMonth > 12)
@@ -43,9 +46,19 @@ public class ProfileController : Controller
             return BadRequest();
         }
 
-        var monthStart = new DateTimeOffset(
-            selectedYear, selectedMonth, 1, 0, 0, 0, TimeSpan.Zero);
-        var monthEnd = monthStart.AddMonths(1);
+        // Treat these as local wall-clock midnights in the user's time zone.
+        var localMonthStart = new DateTime(
+            selectedYear, selectedMonth, 1, 0, 0, 0, DateTimeKind.Unspecified);
+        var localMonthEnd = localMonthStart.AddMonths(1);
+
+        // Convert the local month boundaries to UTC for the database query.
+        var utcMonthStart = ConvertLocalBoundaryToUtc(
+            localMonthStart, timeZone, isStartBoundary: true);
+        var utcMonthEnd = ConvertLocalBoundaryToUtc(
+            localMonthEnd, timeZone, isStartBoundary: false);
+
+        var monthStart = new DateTimeOffset(utcMonthStart, TimeSpan.Zero);
+        var monthEnd = new DateTimeOffset(utcMonthEnd, TimeSpan.Zero);
 
         var events = await _dbContext.SavedEvents
             .AsNoTracking()
@@ -64,6 +77,15 @@ public class ProfileController : Controller
             })
             .ToListAsync();
 
+        // Convert once, before assigning events to local calendar days.
+        foreach (var calendarEvent in events)
+        {
+            calendarEvent.StartsAt =
+                TimeZoneInfo.ConvertTime(calendarEvent.StartsAt, timeZone);
+            calendarEvent.EndsAt =
+                TimeZoneInfo.ConvertTime(calendarEvent.EndsAt, timeZone);
+        }
+
         var firstOfMonth = new DateOnly(selectedYear, selectedMonth, 1);
         var mondayOffset = ((int)firstOfMonth.DayOfWeek + 6) % 7;
         var gridStart = firstOfMonth.AddDays(-mondayOffset);
@@ -72,7 +94,8 @@ public class ProfileController : Controller
         {
             MonthStart = firstOfMonth,
             PreviousMonth = firstOfMonth.AddMonths(-1),
-            NextMonth = firstOfMonth.AddMonths(1)
+            NextMonth = firstOfMonth.AddMonths(1),
+            TimeZoneId = timeZone.Id
         };
 
         for (var weekIndex = 0; weekIndex < 6; weekIndex++)
@@ -87,9 +110,9 @@ public class ProfileController : Controller
                     .Where(calendarEvent =>
                     {
                         var startDate = DateOnly.FromDateTime(
-                            calendarEvent.StartsAt.UtcDateTime);
+                            calendarEvent.StartsAt.DateTime);
                         var endDate = DateOnly.FromDateTime(
-                            calendarEvent.EndsAt.UtcDateTime);
+                            calendarEvent.EndsAt.DateTime);
 
                         return startDate <= date && endDate >= date;
                     })
@@ -109,6 +132,52 @@ public class ProfileController : Controller
         return View(model);
     }
 
+    private static TimeZoneInfo ResolveTimeZone(string? timeZoneId)
+    {
+        if (!string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            try
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                // Fall back for missing or obsolete profile values.
+            }
+            catch (InvalidTimeZoneException)
+            {
+                // Fall back if the system's time-zone data is invalid.
+            }
+        }
+
+        return TimeZoneInfo.Utc;
+    }
+
+    private static DateTime ConvertLocalBoundaryToUtc(
+        DateTime localBoundary,
+        TimeZoneInfo timeZone,
+        bool isStartBoundary)
+    {
+        // Some zones transition at midnight. Advance through any invalid local
+        // times to the first valid minute.
+        while (timeZone.IsInvalidTime(localBoundary))
+        {
+            localBoundary = localBoundary.AddMinutes(1);
+        }
+
+        if (timeZone.IsAmbiguousTime(localBoundary))
+        {
+            var offsets = timeZone.GetAmbiguousTimeOffsets(localBoundary);
+
+            // Start at the earliest matching instant; end at the latest.
+            var offset = isStartBoundary ? offsets.Max() : offsets.Min();
+
+            return new DateTimeOffset(localBoundary, offset).UtcDateTime;
+        }
+
+        return TimeZoneInfo.ConvertTimeToUtc(localBoundary, timeZone);
+    }
+
     [HttpGet]
     public async Task<IActionResult> Edit()
     {
@@ -125,6 +194,8 @@ public class ProfileController : Controller
             PostalCode = user.PostalCode
         };
 
+        model.TimeZoneId = user.TimeZoneId;
+
         return View(model);
     }
 
@@ -136,6 +207,28 @@ public class ProfileController : Controller
         if (user is null)
         {
             return Challenge();
+        }
+
+        var timeZoneId = model.TimeZoneId?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            try
+            {
+                _ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                ModelState.AddModelError(
+                    nameof(model.TimeZoneId),
+                    "The detected time zone is not recognized.");
+            }
+            catch (InvalidTimeZoneException)
+            {
+                ModelState.AddModelError(
+                    nameof(model.TimeZoneId),
+                    "The detected time zone is invalid.");
+            }
         }
 
         if (!ModelState.IsValid)
@@ -150,6 +243,8 @@ public class ProfileController : Controller
         user.PostalCode = string.IsNullOrWhiteSpace(model.PostalCode)
             ? null
             : model.PostalCode.Trim();
+
+        user.TimeZoneId = timeZoneId;
 
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)

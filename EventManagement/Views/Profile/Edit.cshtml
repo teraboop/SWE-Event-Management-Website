@@ -27,6 +27,13 @@
         <span asp-validation-for="PostalCode" class="text-danger"></span>
     </div>
 
+    <div class="mb-3">
+        <label asp-for="TimeZoneId" class="form-label"></label>
+        <input asp-for="TimeZoneId" class="form-control" readonly />
+        <span asp-validation-for="TimeZoneId" class="text-danger"></span>
+        <div class="form-text">Detected from this browser.</div>
+    </div>
+
     <button type="submit" class="btn btn-primary">Save profile</button>
     <a asp-controller="Profile" asp-action="Index" class="btn btn-outline-secondary">
         Cancel
@@ -35,4 +42,14 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const timeZoneField = document.getElementById("TimeZoneId");
+
+        if (timeZoneField && !timeZoneField.value) {
+            timeZoneField.value =
+                Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+        }
+    </script>
+
 }

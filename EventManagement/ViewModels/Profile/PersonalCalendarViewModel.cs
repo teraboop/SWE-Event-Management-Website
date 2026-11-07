@@ -8,6 +8,8 @@ public class PersonalCalendarViewModel
 
     public DateOnly NextMonth { get; set; }
 
+    public string TimeZoneId { get; set; } = "UTC";
+
     public List<List<CalendarDayViewModel>> Weeks { get; set; } = [];
 }
 
