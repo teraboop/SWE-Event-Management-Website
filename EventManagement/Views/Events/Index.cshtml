@@ -78,7 +78,10 @@ else
                         <div class="d-flex gap-2 mt-3">
                             <button type="button"
                                     class="btn btn-primary event-summary-button"
-                                    data-summary-url="@Url.Action("Summary", "Events", new { id = eventCard.Id })">
+                                    data-summary-url="@Url.Action("Summary", "Events", new {
+                                        id = eventCard.Id,
+                                        returnUrl = eventListReturnUrl
+                                    })">
                                 Quick View
                             </button>
 

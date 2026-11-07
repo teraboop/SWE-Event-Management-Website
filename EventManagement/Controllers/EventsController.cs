@@ -48,11 +48,13 @@ public class EventsController : Controller
             return NotFound();
         }
 
+        model.ReturnUrl = Url.Action(nameof(Details), new { id }) ?? "/Events";
+
         return View(model);
     }
 
     [HttpGet]
-    public async Task<IActionResult> Summary(int id, string? returnUrl)
+    public async Task<IActionResult> Summary(int id, string? returnUrl = null)
     {
         var UserId = _userManager.GetUserId(User);
         var model = await _eventDiscoveryService.GetEventDetailsAsync(id, UserId);
@@ -62,10 +64,7 @@ public class EventsController : Controller
             return NotFound();
         }
 
-        if(Url.IsLocalUrl(returnUrl))
-        {
-            model.ReturnUrl = returnUrl;
-        }
+        model.ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl! : Url.Action(nameof(Index)) ?? "/Events";
 
         return PartialView("_EventSummaryModal", model);
     }
