@@ -1,0 +1,79 @@
+﻿@model EventManagement.ViewModels.Profile.PersonalCalendarViewModel
+
+@{
+    ViewData["Title"] = "My Event Calendar";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="mb-0">@Model.MonthStart.ToString("MMMM yyyy") <span class="fs-6 text-muted">UTC</span></h1>
+
+    <nav aria-label="Calendar month navigation" class="d-flex gap-2">
+        <a asp-controller="Profile"
+           asp-action="Calendar"
+           asp-route-year="@Model.PreviousMonth.Year"
+           asp-route-month="@Model.PreviousMonth.Month"
+           class="btn btn-outline-secondary">
+            Previous
+        </a>
+        <a asp-controller="Profile"
+           asp-action="Calendar"
+           asp-route-year="@Model.NextMonth.Year"
+           asp-route-month="@Model.NextMonth.Month"
+           class="btn btn-outline-secondary">
+            Next
+        </a>
+    </nav>
+</div>
+
+<p>Events shown here are saved events. Times are displayed in UTC.</p>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">Monday</th>
+                <th scope="col">Tuesday</th>
+                <th scope="col">Wednesday</th>
+                <th scope="col">Thursday</th>
+                <th scope="col">Friday</th>
+                <th scope="col">Saturday</th>
+                <th scope="col">Sunday</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var week in Model.Weeks)
+            {
+                <tr>
+                    @foreach (var day in week)
+                    {
+                        <td class="align-top @(day.IsInDisplayedMonth ? "" : "text-muted bg-light")">
+                            <div class="fw-semibold mb-1">@day.Date.Day</div>
+
+                            @foreach (var calendarEvent in day.Events)
+                            {
+                                <a asp-controller="Events"
+                                   asp-action="Details"
+                                   asp-route-id="@calendarEvent.EventId"
+                                   class="d-block small mb-1">
+                                    @if (DateOnly.FromDateTime(calendarEvent.StartsAt.UtcDateTime) == day.Date)
+                                    {
+                                        <span>@calendarEvent.StartsAt.UtcDateTime.ToString("h:mm tt") UTC</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Continues</span>
+                                    }
+                                    <span>· @calendarEvent.Title</span>
+                                </a>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<a asp-controller="Profile" asp-action="Index" class="btn btn-outline-secondary">
+    Back to profile
+</a>

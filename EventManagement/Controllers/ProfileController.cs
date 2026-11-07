@@ -23,6 +23,92 @@ public class ProfileController : Controller
         _userManager = userManager;
     }
 
+
+    [HttpGet]
+    public async Task<IActionResult> Calendar(int? year, int? month)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        var utcNow = DateTimeOffset.UtcNow;
+        var selectedYear = year ?? utcNow.Year;
+        var selectedMonth = month ?? utcNow.Month;
+
+        if (selectedYear < 1900 || selectedYear > 9998 ||
+            selectedMonth < 1 || selectedMonth > 12)
+        {
+            return BadRequest();
+        }
+
+        var monthStart = new DateTimeOffset(
+            selectedYear, selectedMonth, 1, 0, 0, 0, TimeSpan.Zero);
+        var monthEnd = monthStart.AddMonths(1);
+
+        var events = await _dbContext.SavedEvents
+            .AsNoTracking()
+            .Where(savedEvent =>
+                savedEvent.UserId == user.Id &&
+                savedEvent.Event.Status == EventStatus.Published &&
+                savedEvent.Event.StartsAt < monthEnd &&
+                savedEvent.Event.EndsAt >= monthStart)
+            .OrderBy(savedEvent => savedEvent.Event.StartsAt)
+            .Select(savedEvent => new CalendarEventViewModel
+            {
+                EventId = savedEvent.EventId,
+                Title = savedEvent.Event.Title,
+                StartsAt = savedEvent.Event.StartsAt,
+                EndsAt = savedEvent.Event.EndsAt
+            })
+            .ToListAsync();
+
+        var firstOfMonth = new DateOnly(selectedYear, selectedMonth, 1);
+        var mondayOffset = ((int)firstOfMonth.DayOfWeek + 6) % 7;
+        var gridStart = firstOfMonth.AddDays(-mondayOffset);
+
+        var model = new PersonalCalendarViewModel
+        {
+            MonthStart = firstOfMonth,
+            PreviousMonth = firstOfMonth.AddMonths(-1),
+            NextMonth = firstOfMonth.AddMonths(1)
+        };
+
+        for (var weekIndex = 0; weekIndex < 6; weekIndex++)
+        {
+            var week = new List<CalendarDayViewModel>();
+
+            for (var dayIndex = 0; dayIndex < 7; dayIndex++)
+            {
+                var date = gridStart.AddDays((weekIndex * 7) + dayIndex);
+
+                var dayEvents = events
+                    .Where(calendarEvent =>
+                    {
+                        var startDate = DateOnly.FromDateTime(
+                            calendarEvent.StartsAt.UtcDateTime);
+                        var endDate = DateOnly.FromDateTime(
+                            calendarEvent.EndsAt.UtcDateTime);
+
+                        return startDate <= date && endDate >= date;
+                    })
+                    .ToList();
+
+                week.Add(new CalendarDayViewModel
+                {
+                    Date = date,
+                    IsInDisplayedMonth = date.Month == selectedMonth,
+                    Events = dayEvents
+                });
+            }
+
+            model.Weeks.Add(week);
+        }
+
+        return View(model);
+    }
+
     [HttpGet]
     public async Task<IActionResult> Edit()
     {
