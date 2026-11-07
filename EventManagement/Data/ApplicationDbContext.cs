@@ -20,6 +20,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<EventInterest> EventInterests => Set<EventInterest>();
 
+    public DbSet<EventTicketType> EventTicketTypes => Set<EventTicketType>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -113,6 +115,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany(category => category.Events)
                 .HasForeignKey(@event => @event.EventCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(@event => @event.TicketSalesMode)
+                .HasConversion<int>()
+                .IsRequired();
+
+            entity.Property(@event => @event.ExternalTicketingUrl)
+                .HasMaxLength(2048);
         });
 
         builder.Entity<EventInterest>(entity =>
@@ -156,6 +165,62 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasOne(savedEvent => savedEvent.Event)
                 .WithMany(@event => @event.SavedByUsers)
                 .HasForeignKey(savedEvent => savedEvent.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<EventTicketType>(entity =>
+        {
+            entity.ToTable("EventTicketTypes", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_EventTicketTypes_Price_NonNegative",
+                    "[Price] >= 0");
+
+                table.HasCheckConstraint(
+                    "CK_EventTicketTypes_QuantityAvailable_NonNegative",
+                    "[QuantityAvailable] >= 0");
+
+                table.HasCheckConstraint(
+                    "CK_EventTicketTypes_SalesWindow",
+                    "[SalesEndAt] > [SalesStartAt]");
+            });
+
+            entity.Property(ticketType => ticketType.Name)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(ticketType => ticketType.Price)
+                .HasPrecision(10, 2)
+                .IsRequired();
+
+            entity.Property(ticketType => ticketType.QuantityAvailable)
+                .IsRequired();
+
+            entity.Property(ticketType => ticketType.SalesStartAt)
+                .IsRequired();
+
+            entity.Property(ticketType => ticketType.SalesEndAt)
+                .IsRequired();
+
+            entity.Property(ticketType => ticketType.IsEnabled)
+                .HasDefaultValue(true);
+
+            entity.HasIndex(ticketType => new
+            {
+                ticketType.EventId,
+                ticketType.Name
+            })
+            .IsUnique();
+
+            entity.HasIndex(ticketType => new
+            {
+                ticketType.EventId,
+                ticketType.IsEnabled
+            });
+
+            entity.HasOne(ticketType => ticketType.Event)
+                .WithMany(@event => @event.TicketTypes)
+                .HasForeignKey(ticketType => ticketType.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
