@@ -13,9 +13,9 @@
 | Requirement | Status | Database Connected |
 | --- | --- | --- |
 | 1. User Management | Implemented | Yes |
-| 2. Browse Events | Implemented (Partially) | Yes |
+| 2. Browse Events | Yes |
 | 3. Filter Events | Implemented | Yes |
-| 4. Manage Profile and Saved Events | Implemented (Partially) | Schema exists; workflow incomplete |
+| 4. Manage Profile and Saved Events | Yes |
 | 5. Rewards Program | Not implemented | No |
 | 6. Event and Email Notifications | Not implemented | No |
 | 7. Browse Vendor Merchandise | Not implemented | No |
