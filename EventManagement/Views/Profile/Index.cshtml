@@ -2,82 +2,146 @@
 
 @{
     ViewData["Title"] = "My Profile";
+    var profileInitial = string.IsNullOrWhiteSpace(Model.DisplayName)
+        ? "N"
+        : Model.DisplayName.Trim()[0].ToString().ToUpperInvariant();
 }
 
-<h1>@Model.DisplayName</h1>
-
-@if (!string.IsNullOrWhiteSpace(Model.City) ||
-     !string.IsNullOrWhiteSpace(Model.PostalCode))
-{
-    <p class="text-muted">
-        @Model.City
-        @if (!string.IsNullOrWhiteSpace(Model.PostalCode))
-        {
-            <span> @Model.PostalCode</span>
-        }
-    </p>
-}
-
-<section class="mb-4" aria-labelledby="interests-heading">
-    <div class="d-flex justify-content-between align-items-center">
-        <h2 id="interests-heading">My interests</h2>
-        <a asp-controller="Profile"
-           asp-action="Interests"
-           class="btn btn-outline-primary btn-sm">
-            Edit interests
-        </a>
-    </div>
-
-    @if (Model.Interests.Count == 0)
+<div class="profile-page">
+    @if (TempData["StatusMessage"] is string statusMessage)
     {
-        <p>You haven’t selected any interests yet.</p>
-    }
-    else
-    {
-        <ul class="list-inline">
-            @foreach (var interest in Model.Interests)
-            {
-                <li class="list-inline-item">
-                    <span class="badge text-bg-secondary">@interest</span>
-                </li>
-            }
-        </ul>
-    }
-</section>
-
-<section aria-labelledby="saved-events-heading">
-    <h2 id="saved-events-heading">Saved upcoming events</h2>
-
-    <a asp-controller="Profile"
-       asp-action="Calendar"
-       class="btn btn-outline-primary btn-sm">
-        Open calendar
-    </a>
-
-    @if (Model.SavedEvents.Count == 0)
-    {
-        <p>You don’t have any saved upcoming events.</p>
-        <a asp-controller="Events" asp-action="Index">Browse events</a>
-    }
-    else
-    {
-        <div class="list-group">
-            @foreach (var savedEvent in Model.SavedEvents)
-            {
-                <article class="list-group-item">
-                    <h3 class="h5">
-                        <a asp-controller="Events"
-                           asp-action="Details"
-                           asp-route-id="@savedEvent.EventId">
-                            @savedEvent.Title
-                        </a>
-                    </h3>
-                    <p class="mb-0">
-                        @savedEvent.StartsAt.ToString("ddd, MMM d, yyyy h:mm tt zzz")
-                        · @savedEvent.VenueName, @savedEvent.City
-                    </p>
-                </article>
-            }
+        <div class="alert alert-success profile-status-message" role="status">
+            @statusMessage
         </div>
     }
-</section>
+
+    <header class="profile-hero">
+        <div class="profile-avatar" aria-hidden="true">@profileInitial</div>
+
+        <div class="profile-identity">
+            <p class="profile-eyebrow">My profile</p>
+            <h1>@Model.DisplayName</h1>
+
+            @if (!string.IsNullOrWhiteSpace(Model.City) ||
+                 !string.IsNullOrWhiteSpace(Model.PostalCode))
+            {
+                <p class="profile-location">
+                    <span aria-hidden="true">●</span>
+                    @Model.City
+                    @if (!string.IsNullOrWhiteSpace(Model.PostalCode))
+                    {
+                        <span> @Model.PostalCode</span>
+                    }
+                </p>
+            }
+        </div>
+
+        <a asp-controller="Profile"
+           asp-action="Edit"
+           class="btn btn-light profile-edit-button">
+            Edit profile
+        </a>
+    </header>
+
+    <div class="profile-dashboard">
+        <section class="profile-panel profile-interests-panel" aria-labelledby="interests-heading">
+            <div class="profile-panel-header">
+                <div>
+                    <p class="profile-panel-kicker">Personalize discovery</p>
+                    <h2 id="interests-heading">My interests</h2>
+                </div>
+            </div>
+
+            <p class="profile-panel-description">
+                The topics you follow help us surface events that fit your fandoms.
+            </p>
+
+            @if (Model.Interests.Count == 0)
+            {
+                <div class="profile-empty-state">
+                    <p>You haven’t selected any interests yet.</p>
+                </div>
+            }
+            else
+            {
+                <ul class="profile-interest-list list-unstyled">
+                    @foreach (var interest in Model.Interests)
+                    {
+                        <li>@interest</li>
+                    }
+                </ul>
+            }
+
+            <a asp-controller="Profile"
+               asp-action="Interests"
+               class="btn btn-outline-primary profile-panel-action">
+                Edit interests
+            </a>
+        </section>
+
+        <section class="profile-panel profile-saved-panel" aria-labelledby="saved-events-heading">
+            <div class="profile-panel-header profile-saved-header">
+                <div>
+                    <p class="profile-panel-kicker">Your event list</p>
+                    <h2 id="saved-events-heading">Saved upcoming events</h2>
+                    <p class="profile-panel-description">
+                        Keep track of the conventions and experiences you want to attend.
+                    </p>
+                </div>
+
+                <a asp-controller="Profile"
+                   asp-action="Calendar"
+                   class="btn btn-outline-primary">
+                    Open calendar
+                </a>
+            </div>
+
+            @if (Model.SavedEvents.Count == 0)
+            {
+                <div class="profile-empty-state profile-saved-empty">
+                    <span aria-hidden="true">✦</span>
+                    <h3>No saved events yet</h3>
+                    <p>Explore upcoming events and save the ones you don’t want to miss.</p>
+                    <a asp-controller="Events" asp-action="Index" class="btn btn-primary">Browse events</a>
+                </div>
+            }
+            else
+            {
+                <div class="profile-saved-list">
+                    @foreach (var savedEvent in Model.SavedEvents)
+                    {
+                        <article class="profile-saved-event">
+                            <div class="profile-saved-date">
+                                <span>@savedEvent.StartsAt.ToString("ddd")</span>
+                                <strong>@savedEvent.StartsAt.ToString("MMM d")</strong>
+                            </div>
+
+                            <div class="profile-saved-details">
+                                <h3>
+                                    <a asp-controller="Events"
+                                       asp-action="Details"
+                                       asp-route-id="@savedEvent.EventId">
+                                        @savedEvent.Title
+                                    </a>
+                                </h3>
+                                <p>
+                                    @savedEvent.StartsAt.ToString("h:mm tt zzz")
+                                    <span aria-hidden="true">·</span>
+                                    @savedEvent.VenueName, @savedEvent.City
+                                </p>
+                            </div>
+
+                            <a asp-controller="Events"
+                               asp-action="Details"
+                               asp-route-id="@savedEvent.EventId"
+                               class="profile-saved-link"
+                               aria-label="View details for @savedEvent.Title">
+                                <span aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+</div>
