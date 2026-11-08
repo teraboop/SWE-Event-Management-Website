@@ -1,4 +1,6 @@
 ﻿@model EventManagement.ViewModels.Events.EventDetailsViewModel
+@using EventManagement.Models.Events
+@using EventManagement.Services
 
 @{
     ViewData["Title"] = Model.Title;
@@ -43,6 +45,138 @@
     <strong>Price:</strong>
     @(Model.MinimumPrice == 0 ? "Free" : $"From {Model.MinimumPrice:C}")
 </p>
+
+<section class="my-4" aria-labelledby="ticketing-heading">
+    <h2 id="ticketing-heading" class="h4">Tickets</h2>
+
+    @if (TempData["TicketError"] is string ticketError)
+    {
+        <div class="alert alert-danger" role="alert">@ticketError</div>
+    }
+
+    @switch (Model.TicketSalesMode)
+    {
+        case TicketSalesMode.External:
+            @if (Uri.TryCreate(Model.ExternalTicketingUrl, UriKind.Absolute, out var ticketingUri)
+                 && (ticketingUri.Scheme == Uri.UriSchemeHttps || ticketingUri.Scheme == Uri.UriSchemeHttp))
+            {
+                <a href="@ticketingUri.AbsoluteUri"
+                   class="btn btn-outline-primary"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    View tickets on external site
+                </a>
+            }
+            else
+            {
+                <p>External ticket information is not currently available.</p>
+            }
+            break;
+
+        case TicketSalesMode.OnPlatform:
+            @if (Model.TicketsHeld > 0)
+            {
+                <div class="alert alert-info" role="status">
+                    You have @Model.TicketsHeld @(Model.TicketsHeld == 1 ? "ticket" : "tickets") for this event.
+                    <a asp-controller="Tickets" asp-action="Index" class="alert-link">View my tickets</a>
+                </div>
+            }
+
+            @if (Model.HasStarted)
+            {
+                <p>This event has already started, so tickets are no longer on sale.</p>
+            }
+            else if (Model.AvailableTicketTypes.Count == 0)
+            {
+                <p>No ticket types are currently on sale.</p>
+            }
+            else
+            {
+                // The page only hides or shows the buy controls. The purchase
+                // service re-checks every eligibility rule when the form is submitted.
+                var canBuy = User.Identity?.IsAuthenticated == true && !Model.IsOwnEvent;
+
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th scope="col">Ticket</th>
+                                <th scope="col">Price</th>
+                                <th scope="col">Sales end</th>
+                                <th scope="col"><span class="visually-hidden">Buy</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ticketType in Model.AvailableTicketTypes)
+                            {
+                                var maxQuantity = Math.Min(TicketPurchaseService.MaxTicketsPerOrder, ticketType.Remaining);
+                                <tr>
+                                    <td>
+                                        @ticketType.Name
+                                        @if (!ticketType.IsSoldOut && ticketType.Remaining <= 10)
+                                        {
+                                            <div class="small text-muted">Only @ticketType.Remaining left</div>
+                                        }
+                                    </td>
+                                    <td>@(ticketType.Price == 0 ? "Free" : ticketType.Price.ToString("C"))</td>
+                                    <td>@ticketType.SalesEndAt.LocalDateTime.ToString("MMMM d, yyyy h:mm tt")</td>
+                                    <td class="text-end">
+                                        @if (ticketType.IsSoldOut)
+                                        {
+                                            <span class="badge text-bg-secondary">Sold out</span>
+                                        }
+                                        else if (canBuy)
+                                        {
+                                            <form asp-controller="Tickets" asp-action="Purchase" method="post"
+                                                  class="d-inline-flex gap-2 justify-content-end">
+                                                <input type="hidden" name="eventId" value="@Model.Id" />
+                                                <input type="hidden" name="ticketTypeId" value="@ticketType.Id" />
+                                                <input type="number" name="quantity" value="1"
+                                                       min="1" max="@maxQuantity" step="1"
+                                                       class="form-control form-control-sm ticket-quantity"
+                                                       aria-label="Number of @ticketType.Name tickets" />
+                                                <button type="submit" class="btn btn-primary btn-sm text-nowrap">
+                                                    @(ticketType.Price == 0 ? "Get tickets" : "Buy tickets")
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (User.Identity?.IsAuthenticated != true)
+                {
+                    <p>
+                        <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Model.ReturnUrl">Log in</a>
+                        to get tickets.
+                    </p>
+                }
+                else if (Model.IsOwnEvent)
+                {
+                    <p class="text-muted">You organize this event, so you can't buy tickets for it.</p>
+                }
+                else
+                {
+                    <p class="text-muted small">
+                        Up to @TicketPurchaseService.MaxTicketsPerOrder tickets per order.
+                        Online payment isn't available yet, so orders are confirmed immediately.
+                    </p>
+                }
+            }
+            break;
+
+        case TicketSalesMode.NotRequired:
+            <p>Tickets are not required for this event.</p>
+            break;
+
+        default:
+            <p>Ticket information has not been configured for this event.</p>
+            break;
+    }
+</section>
 
 @if (Model.Interests.Count > 0)
 {

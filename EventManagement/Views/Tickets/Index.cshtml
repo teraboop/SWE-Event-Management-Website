@@ -1,0 +1,88 @@
+@model EventManagement.ViewModels.Tickets.MyTicketsViewModel
+@using EventManagement.Models.Events
+@using EventManagement.ViewModels.Tickets
+
+@{
+    ViewData["Title"] = "My tickets";
+
+    async Task RenderEvents(IReadOnlyList<MyTicketsEventViewModel> events)
+    {
+        foreach (var ticketEvent in events)
+        {
+            <article class="card mb-3">
+                <div class="card-body">
+                    <h3 class="h5 card-title mb-1">
+                        <a asp-controller="Events" asp-action="Details" asp-route-id="@ticketEvent.EventId">@ticketEvent.Title</a>
+                        @if (ticketEvent.Status == EventStatus.Cancelled)
+                        {
+                            <span class="badge text-bg-danger ms-2">Cancelled</span>
+                        }
+                    </h3>
+                    <p class="text-muted mb-3">
+                        @ticketEvent.StartsAt.LocalDateTime.ToString("ddd, MMM d, yyyy · h:mm tt")
+                        · @ticketEvent.VenueName, @ticketEvent.City
+                    </p>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Ticket</th>
+                                    <th scope="col">Code</th>
+                                    <th scope="col">Price paid</th>
+                                    <th scope="col">Order</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ticket in ticketEvent.Tickets)
+                                {
+                                    <tr>
+                                        <td>@ticket.TicketTypeName</td>
+                                        <td><code title="@ticket.Code">@ticket.DisplayCode</code></td>
+                                        <td>@(ticket.UnitPrice == 0 ? "Free" : ticket.UnitPrice.ToString("C"))</td>
+                                        <td>
+                                            #@ticket.OrderId
+                                            <span class="small text-muted">
+                                                @ticket.PurchasedAt.LocalDateTime.ToString("MMM d, yyyy")
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+        }
+    }
+}
+
+<h1>My tickets</h1>
+
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-success" role="status">@statusMessage</div>
+}
+
+<section class="mb-4" aria-labelledby="upcoming-heading">
+    <h2 id="upcoming-heading" class="h4">Upcoming</h2>
+    @if (Model.UpcomingEvents.Count == 0)
+    {
+        <p>
+            You don't have tickets for any upcoming events.
+            <a asp-controller="Events" asp-action="Index">Browse events</a>
+        </p>
+    }
+    else
+    {
+        await RenderEvents(Model.UpcomingEvents);
+    }
+</section>
+
+@if (Model.PastEvents.Count > 0)
+{
+    <section aria-labelledby="past-heading">
+        <h2 id="past-heading" class="h4">Past</h2>
+        @{ await RenderEvents(Model.PastEvents); }
+    </section>
+}

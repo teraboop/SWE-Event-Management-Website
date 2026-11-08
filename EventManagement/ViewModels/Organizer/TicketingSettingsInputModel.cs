@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using EventManagement.Models.Events;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace EventManagement.ViewModels.Organizer;
 
@@ -10,8 +11,6 @@ public class TicketingSettingsInputModel
 
     [StringLength(2048)]
     public string? ExternalTicketingUrl { get; set; }
-
-    public List<TicketTypeInputModel> TicketTypes { get; set; } = [];
 }
 
 public class TicketTypeInputModel
@@ -28,9 +27,18 @@ public class TicketTypeInputModel
     [Range(0, int.MaxValue)]
     public int QuantityAvailable { get; set; }
 
-    public DateTimeOffset? SalesStartAt { get; set; }
+    [Required]
+    public DateTimeOffset SalesStartAt { get; set; }
 
-    public DateTimeOffset? SalesEndAt { get; set; }
+    [Required]
+    public DateTimeOffset SalesEndAt { get; set; }
 
     public bool IsEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Display only. Always loaded from the database and never bound from the
+    /// form, so a tampered request can't change it.
+    /// </summary>
+    [BindNever]
+    public int QuantitySold { get; set; }
 }

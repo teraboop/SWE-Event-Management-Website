@@ -14,15 +14,18 @@ public class EventsController : Controller
     private readonly EventDiscoveryService _eventDiscoveryService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
+    private readonly TicketPurchaseService _ticketPurchaseService;
 
     public EventsController(
         EventDiscoveryService eventDiscoveryService,
         UserManager<ApplicationUser> userManager,
-        ApplicationDbContext dbContext)
+        ApplicationDbContext dbContext,
+        TicketPurchaseService ticketPurchaseService)
     {
         _eventDiscoveryService = eventDiscoveryService;
         _userManager = userManager;
         _dbContext = dbContext;
+        _ticketPurchaseService = ticketPurchaseService;
     }
 
     [HttpGet]
@@ -49,6 +52,11 @@ public class EventsController : Controller
         }
 
         model.ReturnUrl = Url.Action(nameof(Details), new { id }) ?? "/Events";
+
+        if (UserId is not null)
+        {
+            model.TicketsHeld = await _ticketPurchaseService.CountTicketsHeldAsync(UserId, id);
+        }
 
         return View(model);
     }
