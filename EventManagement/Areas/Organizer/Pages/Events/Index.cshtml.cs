@@ -56,6 +56,9 @@ public class IndexModel : PageModel
                 OrganizerName = @event.Organizer.UserName ?? string.Empty,
                 AcceptsVendorApplications = @event.AcceptsVendorApplications,
                 PendingVendorApplications = @event.VendorApplications
+                    .Count(application => application.Status == ApplicationStatus.Submitted),
+                AcceptsPanelApplications = @event.AcceptsPanelApplications,
+                PendingPanelApplications = @event.PanelApplications
                     .Count(application => application.Status == ApplicationStatus.Submitted)
             })
             .ToListAsync();
@@ -82,5 +85,9 @@ public class IndexModel : PageModel
         public bool AcceptsVendorApplications { get; set; }
 
         public int PendingVendorApplications { get; set; }
+
+        public bool AcceptsPanelApplications { get; set; }
+
+        public int PendingPanelApplications { get; set; }
     }
 }

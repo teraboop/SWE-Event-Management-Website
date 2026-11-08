@@ -16,14 +16,17 @@ public class EventsController : Controller
     private readonly ApplicationDbContext _dbContext;
     private readonly TicketPurchaseService _ticketPurchaseService;
     private readonly VendorApplicationService _vendorApplicationService;
+    private readonly PanelApplicationService _panelApplicationService;
 
     public EventsController(
         EventDiscoveryService eventDiscoveryService,
         UserManager<ApplicationUser> userManager,
         ApplicationDbContext dbContext,
         TicketPurchaseService ticketPurchaseService,
-        VendorApplicationService vendorApplicationService)
+        VendorApplicationService vendorApplicationService,
+        PanelApplicationService panelApplicationService)
     {
+        _panelApplicationService = panelApplicationService;
         _eventDiscoveryService = eventDiscoveryService;
         _userManager = userManager;
         _dbContext = dbContext;
@@ -65,6 +68,11 @@ public class EventsController : Controller
                 var vendorState = await _vendorApplicationService.GetEventApplicationStateAsync(UserId, id);
                 model.HasVendorProfile = vendorState.HasProfile;
                 model.VendorApplicationStatus = vendorState.LatestStatus;
+            }
+
+            if (model.AcceptsPanelApplications)
+            {
+                model.PendingPanelProposals = await _panelApplicationService.CountPendingAsync(UserId, id);
             }
         }
 

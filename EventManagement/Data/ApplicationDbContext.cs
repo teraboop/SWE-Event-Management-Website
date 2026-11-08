@@ -1,5 +1,6 @@
 ﻿using EventManagement.Models.Commerce;
 using EventManagement.Models.Events;
+using EventManagement.Models.Panels;
 using EventManagement.Models.Profile;
 using EventManagement.Models.Vendors;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -31,6 +32,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<VendorProfile> VendorProfiles => Set<VendorProfile>();
 
     public DbSet<VendorApplication> VendorApplications => Set<VendorApplication>();
+
+    public DbSet<PanelApplication> PanelApplications => Set<PanelApplication>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -374,6 +377,53 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.HasOne(application => application.Event)
                 .WithMany(@event => @event.VendorApplications)
+                .HasForeignKey(application => application.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PanelApplication>(entity =>
+        {
+            entity.ToTable("PanelApplications", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_PanelApplications_DurationMinutes",
+                    "[DurationMinutes] BETWEEN 15 AND 240");
+            });
+
+            entity.Property(application => application.Status).HasConversion<int>();
+
+            entity.Property(application => application.Title).HasMaxLength(150).IsRequired();
+            entity.Property(application => application.Description).HasMaxLength(2000).IsRequired();
+            entity.Property(application => application.Panelists).HasMaxLength(1000).IsRequired();
+            entity.Property(application => application.ContactEmail).HasMaxLength(256).IsRequired();
+            entity.Property(application => application.Message).HasMaxLength(1000);
+            entity.Property(application => application.ReviewedByUserId).HasMaxLength(450);
+            entity.Property(application => application.ReviewedByName).HasMaxLength(256);
+            entity.Property(application => application.ReviewNote).HasMaxLength(1000);
+
+            // No two pending proposals with the same title from one user for
+            // one event, which also catches a form submitted twice. Different
+            // panels from the same user are fine.
+            entity.HasIndex(application => new
+            {
+                application.EventId,
+                application.ApplicantUserId,
+                application.Title
+            })
+            .IsUnique()
+            .HasFilter("[Status] = 0")
+            .HasDatabaseName("IX_PanelApplications_OnePendingPerTitle");
+
+            // Review queue and the public list of approved panels.
+            entity.HasIndex(application => new { application.EventId, application.Status });
+
+            entity.HasOne(application => application.Applicant)
+                .WithMany()
+                .HasForeignKey(application => application.ApplicantUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(application => application.Event)
+                .WithMany(@event => @event.PanelApplications)
                 .HasForeignKey(application => application.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

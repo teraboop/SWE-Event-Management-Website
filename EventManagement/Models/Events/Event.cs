@@ -91,4 +91,12 @@ public class Event
     public bool AcceptsVendorApplications { get; set; }
 
     public ICollection<Vendors.VendorApplication> VendorApplications { get; set; } = [];
+
+    /// <summary>
+    /// Organizer opt-in for panel proposals, separate from vendor applications
+    /// so an event can take one without the other.
+    /// </summary>
+    public bool AcceptsPanelApplications { get; set; }
+
+    public ICollection<Panels.PanelApplication> PanelApplications { get; set; } = [];
 }

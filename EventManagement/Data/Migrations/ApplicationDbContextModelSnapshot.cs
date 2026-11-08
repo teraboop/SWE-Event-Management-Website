@@ -179,6 +179,9 @@ namespace EventManagement.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AcceptsPanelApplications")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("AcceptsVendorApplications")
                         .HasColumnType("bit");
 
@@ -361,6 +364,86 @@ namespace EventManagement.Data.Migrations
                     b.HasIndex("EventId");
 
                     b.ToTable("SavedEvents", (string)null);
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Panels.PanelApplication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicantUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ContactEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Panelists")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ReviewedByName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ReviewedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("SubmittedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicantUserId");
+
+                    b.HasIndex("EventId", "Status");
+
+                    b.HasIndex("EventId", "ApplicantUserId", "Title")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PanelApplications_OnePendingPerTitle")
+                        .HasFilter("[Status] = 0");
+
+                    b.ToTable("PanelApplications", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PanelApplications_DurationMinutes", "[DurationMinutes] BETWEEN 15 AND 240");
+                        });
                 });
 
             modelBuilder.Entity("EventManagement.Models.Profile.InterestCategory", b =>
@@ -767,6 +850,25 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Panels.PanelApplication", b =>
+                {
+                    b.HasOne("EventManagement.Data.ApplicationUser", "Applicant")
+                        .WithMany()
+                        .HasForeignKey("ApplicantUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EventManagement.Models.Events.Event", "Event")
+                        .WithMany("PanelApplications")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Applicant");
+
+                    b.Navigation("Event");
+                });
+
             modelBuilder.Entity("EventManagement.Models.Profile.UserInterest", b =>
                 {
                     b.HasOne("EventManagement.Models.Profile.InterestCategory", "InterestCategory")
@@ -881,6 +983,8 @@ namespace EventManagement.Data.Migrations
             modelBuilder.Entity("EventManagement.Models.Events.Event", b =>
                 {
                     b.Navigation("Interests");
+
+                    b.Navigation("PanelApplications");
 
                     b.Navigation("SavedByUsers");
 

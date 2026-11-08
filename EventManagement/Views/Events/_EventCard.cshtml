@@ -14,10 +14,8 @@
             @Model.VenueName, @Model.City
         </p>
 
-        @if (Model.AcceptsVendorApplications)
-        {
-            <p class="vendor-open-badge">Open to vendor applications</p>
-        }
+        <partial name="_OpenApplicationBadges"
+                 model="(Model.AcceptsVendorApplications, Model.AcceptsPanelApplications)" />
 
         @if (Model.Interests.Count > 0)
         {

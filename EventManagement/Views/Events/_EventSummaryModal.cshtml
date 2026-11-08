@@ -24,10 +24,8 @@
                     @(Model.MinimumPrice == 0 ? "Free" : $"From {Model.MinimumPrice:C}")
                 </p>
 
-                @if (Model.AcceptsVendorApplications && !Model.HasEnded)
-                {
-                    <p class="vendor-open-badge">Open to vendor applications</p>
-                }
+                <partial name="_OpenApplicationBadges"
+                         model="(Model.AcceptsVendorApplications && !Model.HasEnded, Model.AcceptsPanelApplications && !Model.HasEnded)" />
 
                 @if (Model.Interests.Count > 0)
                 {
