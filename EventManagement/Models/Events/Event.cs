@@ -99,4 +99,9 @@ public class Event
     public bool AcceptsPanelApplications { get; set; }
 
     public ICollection<Panels.PanelApplication> PanelApplications { get; set; } = [];
+
+    /// <summary>Optional background for the event page header and quick view.</summary>
+    public int? BackgroundImageId { get; set; }
+
+    public EventImage? BackgroundImage { get; set; }
 }

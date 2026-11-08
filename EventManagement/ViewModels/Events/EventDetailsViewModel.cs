@@ -56,6 +56,9 @@ public class EventDetailsViewModel
 
     public string? ExternalWebsiteUrl { get; set; }
 
+    /// <summary>Background for the page header and quick view; served at /images/event/{id}.</summary>
+    public int? BackgroundImageId { get; set; }
+
     public bool IsSaved { get; set; }
 
     public string ReturnUrl { get; set; } = "/Events";

@@ -1,0 +1,46 @@
+@model List<EventManagement.ViewModels.Events.EventApplicationReviewItem>
+@using EventManagement.Models.Applications
+
+@{
+    ViewData["Title"] = "Event applications";
+    var pending = Model.Where(application => application.Status == ApplicationStatus.Submitted).ToList();
+    var decided = Model.Where(application => application.Status != ApplicationStatus.Submitted).ToList();
+}
+
+<a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary mb-3">Back to admin</a>
+
+<h1>@ViewData["Title"]</h1>
+<p class="text-muted">
+    Approving an application lists the event on the site right away and makes the applicant its organizer.
+</p>
+
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-success" role="status">@statusMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger" role="alert">@errorMessage</div>
+}
+
+<h2 class="h4">Pending (@pending.Count)</h2>
+@if (pending.Count == 0)
+{
+    <p>No applications are waiting for review.</p>
+}
+else
+{
+    @foreach (var application in pending)
+    {
+        <partial name="_EventApplicationReview" model="application" />
+    }
+}
+
+@if (decided.Count > 0)
+{
+    <h2 class="h4 mt-4">Decided</h2>
+    @foreach (var application in decided)
+    {
+        <partial name="_EventApplicationReview" model="application" />
+    }
+}

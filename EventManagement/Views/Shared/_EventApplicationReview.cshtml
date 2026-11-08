@@ -1,0 +1,93 @@
+@model EventManagement.ViewModels.Events.EventApplicationReviewItem
+@using EventManagement.Models.Applications
+
+<article class="card mb-3" aria-labelledby="event-application-@Model.Id-heading">
+    @if (Model.BackgroundImageId is int imageId)
+    {
+        <img src="/images/event/@imageId" class="card-img-top event-application-image" alt="Background image for @Model.Title" loading="lazy" />
+    }
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+                <h3 id="event-application-@Model.Id-heading" class="h5 mb-0">@Model.Title</h3>
+                <div class="small text-muted">
+                    Submitted by @Model.ApplicantUserName on @Model.SubmittedAt.LocalDateTime.ToString("MMM d, yyyy h:mm tt")
+                </div>
+            </div>
+            <partial name="_ApplicationStatusBadge" model="Model.Status" />
+        </div>
+
+        <dl class="row mb-2">
+            <dt class="col-sm-3">When</dt>
+            <dd class="col-sm-9">
+                @Model.StartsAt.LocalDateTime.ToString("ddd, MMM d, yyyy h:mm tt")
+                to @Model.EndsAt.LocalDateTime.ToString(Model.StartsAt.Date == Model.EndsAt.Date ? "h:mm tt" : "ddd, MMM d, yyyy h:mm tt")
+            </dd>
+            <dt class="col-sm-3">Where</dt>
+            <dd class="col-sm-9">@Model.VenueName, @Model.City @Model.PostalCode</dd>
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">@Model.EventCategoryName</dd>
+            @if (Model.Interests.Count > 0)
+            {
+                <dt class="col-sm-3">Interests</dt>
+                <dd class="col-sm-9">@string.Join(" · ", Model.Interests)</dd>
+            }
+            <dt class="col-sm-3">About</dt>
+            <dd class="col-sm-9 text-prewrap">@Model.Description</dd>
+            @if (!string.IsNullOrWhiteSpace(Model.ExternalWebsiteUrl))
+            {
+                <dt class="col-sm-3">Website</dt>
+                <dd class="col-sm-9">
+                    <a href="@Model.ExternalWebsiteUrl" target="_blank" rel="noopener noreferrer nofollow">@Model.ExternalWebsiteUrl</a>
+                </dd>
+            }
+            <dt class="col-sm-3">Contact</dt>
+            <dd class="col-sm-9">
+                @Model.ContactName
+                @if (!string.IsNullOrWhiteSpace(Model.OrganizationName))
+                {
+                    <span>(@Model.OrganizationName)</span>
+                }
+                <div><a href="mailto:@Model.ContactEmail">@Model.ContactEmail</a></div>
+                @if (!string.IsNullOrWhiteSpace(Model.ContactPhone))
+                {
+                    <div>@Model.ContactPhone</div>
+                }
+            </dd>
+            @if (!string.IsNullOrWhiteSpace(Model.Message))
+            {
+                <dt class="col-sm-3">Message</dt>
+                <dd class="col-sm-9 text-prewrap">@Model.Message</dd>
+            }
+        </dl>
+
+        @if (Model.Status == ApplicationStatus.Submitted)
+        {
+            <form method="post" action="@Model.ReviewFormAction" asp-antiforgery="true">
+                <input type="hidden" name="applicationId" value="@Model.Id" />
+                <div class="mb-2">
+                    <label for="event-note-@Model.Id" class="form-label small">Note to the applicant (required to reject)</label>
+                    <textarea id="event-note-@Model.Id" name="note" class="form-control form-control-sm" rows="2" maxlength="1000"></textarea>
+                </div>
+                <button type="submit" name="approve" value="true" class="btn btn-success btn-sm">Approve and list event</button>
+                <button type="submit" name="approve" value="false" class="btn btn-outline-danger btn-sm ms-1">Reject</button>
+            </form>
+        }
+        else if (Model.DecidedAt is not null)
+        {
+            <p class="small text-muted mb-0">
+                @(Model.Status == ApplicationStatus.Withdrawn ? "Withdrawn by the applicant" : $"{Model.Status} by {Model.ReviewedByName}")
+                on @Model.DecidedAt.Value.LocalDateTime.ToString("MMM d, yyyy")
+                @if (!string.IsNullOrWhiteSpace(Model.ReviewNote))
+                {
+                    <span>— “@Model.ReviewNote”</span>
+                }
+                @if (Model.CreatedEventId is int eventId)
+                {
+                    <span>·</span>
+                    <a asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@eventId">View event</a>
+                }
+            </p>
+        }
+    </div>
+</article>

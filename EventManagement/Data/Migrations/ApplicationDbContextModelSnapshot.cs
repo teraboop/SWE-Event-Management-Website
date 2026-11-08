@@ -185,6 +185,9 @@ namespace EventManagement.Data.Migrations
                     b.Property<bool>("AcceptsVendorApplications")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("BackgroundImageId")
+                        .HasColumnType("int");
+
                     b.Property<string>("City")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -243,6 +246,8 @@ namespace EventManagement.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BackgroundImageId");
+
                     b.HasIndex("City");
 
                     b.HasIndex("EventCategoryId");
@@ -252,6 +257,142 @@ namespace EventManagement.Data.Migrations
                     b.HasIndex("Status", "StartsAt");
 
                     b.ToTable("Events", (string)null);
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Events.EventApplication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicantUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("BackgroundImageId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ContactEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ContactName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("ContactPhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int?>("CreatedEventId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTimeOffset>("EndsAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("EventCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExternalWebsiteUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("OrganizationName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ReviewedByName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ReviewedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("SubmittedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("VenueName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BackgroundImageId");
+
+                    b.HasIndex("CreatedEventId");
+
+                    b.HasIndex("EventCategoryId");
+
+                    b.HasIndex("ApplicantUserId", "Title")
+                        .IsUnique()
+                        .HasDatabaseName("IX_EventApplications_OnePendingPerTitle")
+                        .HasFilter("[Status] = 0");
+
+                    b.HasIndex("Status", "SubmittedAt");
+
+                    b.ToTable("EventApplications", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_EventApplications_CreatedEventMatchesStatus", "([Status] = 1 AND [CreatedEventId] IS NOT NULL) OR ([Status] <> 1 AND [CreatedEventId] IS NULL)");
+
+                            t.HasCheckConstraint("CK_EventApplications_EndsAfterStart", "[EndsAt] > [StartsAt]");
+                        });
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Events.EventApplicationInterest", b =>
+                {
+                    b.Property<int>("EventApplicationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InterestCategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("EventApplicationId", "InterestCategoryId");
+
+                    b.HasIndex("InterestCategoryId");
+
+                    b.ToTable("EventApplicationInterests", (string)null);
                 });
 
             modelBuilder.Entity("EventManagement.Models.Events.EventCategory", b =>
@@ -273,6 +414,36 @@ namespace EventManagement.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("EventCategories", (string)null);
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Events.EventImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<byte[]>("Data")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<DateTimeOffset>("UploadedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UploadedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EventImages", (string)null);
                 });
 
             modelBuilder.Entity("EventManagement.Models.Events.EventInterest", b =>
@@ -784,6 +955,11 @@ namespace EventManagement.Data.Migrations
 
             modelBuilder.Entity("EventManagement.Models.Events.Event", b =>
                 {
+                    b.HasOne("EventManagement.Models.Events.EventImage", "BackgroundImage")
+                        .WithMany()
+                        .HasForeignKey("BackgroundImageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("EventManagement.Models.Events.EventCategory", "EventCategory")
                         .WithMany("Events")
                         .HasForeignKey("EventCategoryId")
@@ -796,9 +972,63 @@ namespace EventManagement.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("BackgroundImage");
+
                     b.Navigation("EventCategory");
 
                     b.Navigation("Organizer");
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Events.EventApplication", b =>
+                {
+                    b.HasOne("EventManagement.Data.ApplicationUser", "Applicant")
+                        .WithMany()
+                        .HasForeignKey("ApplicantUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EventManagement.Models.Events.EventImage", "BackgroundImage")
+                        .WithMany()
+                        .HasForeignKey("BackgroundImageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("EventManagement.Models.Events.Event", "CreatedEvent")
+                        .WithMany()
+                        .HasForeignKey("CreatedEventId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("EventManagement.Models.Events.EventCategory", "EventCategory")
+                        .WithMany()
+                        .HasForeignKey("EventCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Applicant");
+
+                    b.Navigation("BackgroundImage");
+
+                    b.Navigation("CreatedEvent");
+
+                    b.Navigation("EventCategory");
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Events.EventApplicationInterest", b =>
+                {
+                    b.HasOne("EventManagement.Models.Events.EventApplication", "EventApplication")
+                        .WithMany("Interests")
+                        .HasForeignKey("EventApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EventManagement.Models.Profile.InterestCategory", "InterestCategory")
+                        .WithMany()
+                        .HasForeignKey("InterestCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EventApplication");
+
+                    b.Navigation("InterestCategory");
                 });
 
             modelBuilder.Entity("EventManagement.Models.Events.EventInterest", b =>
@@ -991,6 +1221,11 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("TicketTypes");
 
                     b.Navigation("VendorApplications");
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Events.EventApplication", b =>
+                {
+                    b.Navigation("Interests");
                 });
 
             modelBuilder.Entity("EventManagement.Models.Events.EventCategory", b =>

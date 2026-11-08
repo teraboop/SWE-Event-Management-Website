@@ -1,0 +1,131 @@
+@model EventManagement.ViewModels.Events.EventListingInputModel
+@using EventManagement.Services
+@using EventManagement.ViewModels.Events
+
+@*
+    The fields of an event listing, shared by the event application form and
+    the organizer's Edit listing page. Render with <partial for="Input"> so the
+    field names get the "Input." prefix, and pass the choices as
+    view-data["ListingOptions"]. The surrounding form must use
+    enctype="multipart/form-data" for the image upload.
+*@
+@{
+    var options = (EventListingFormOptions)ViewData["ListingOptions"]!;
+    var interestFieldName = Html.NameFor(model => model.InterestIds);
+    var idPrefix = Html.IdFor(model => model.InterestIds);
+}
+
+<fieldset class="mb-4">
+    <legend class="h5">About the event</legend>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" maxlength="200" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="6" maxlength="4000"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label asp-for="EventCategoryId" class="form-label"></label>
+            <select asp-for="EventCategoryId" class="form-select">
+                <option value="">Choose a category</option>
+                @foreach (var category in options.Categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+            <span asp-validation-for="EventCategoryId" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="StartsAt" class="form-label"></label>
+            <input asp-for="StartsAt" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+            <span asp-validation-for="StartsAt" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="EndsAt" class="form-label"></label>
+            <input asp-for="EndsAt" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+            <span asp-validation-for="EndsAt" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-5">
+            <label asp-for="VenueName" class="form-label"></label>
+            <input asp-for="VenueName" class="form-control" maxlength="200" />
+            <span asp-validation-for="VenueName" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="City" class="form-label"></label>
+            <input asp-for="City" class="form-control" maxlength="100" />
+            <span asp-validation-for="City" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="PostalCode" class="form-label"></label>
+            <input asp-for="PostalCode" class="form-control" maxlength="20" />
+            <span asp-validation-for="PostalCode" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ExternalWebsiteUrl" class="form-label"></label>
+        <input asp-for="ExternalWebsiteUrl" class="form-control" type="url" placeholder="https://" />
+        <span asp-validation-for="ExternalWebsiteUrl" class="text-danger"></span>
+    </div>
+</fieldset>
+
+@if (options.Interests.Count > 0)
+{
+    <fieldset class="mb-4">
+        <legend class="h5">Interests</legend>
+        <p class="text-muted small">Pick the interests this event fits, so it's recommended to the right people.</p>
+        <div class="interest-grid">
+            @foreach (var interest in options.Interests)
+            {
+                var inputId = $"{idPrefix}-{interest.Id}";
+                <input class="btn-check"
+                       type="checkbox"
+                       autocomplete="off"
+                       id="@inputId"
+                       name="@interestFieldName"
+                       value="@interest.Id"
+                       checked="@(Model.InterestIds.Contains(interest.Id) ? "checked" : null)" />
+                <label class="interest-option" for="@inputId">
+                    <span class="interest-option-box" aria-hidden="true"></span>
+                    <span>@interest.Name</span>
+                </label>
+            }
+        </div>
+    </fieldset>
+}
+
+<fieldset class="mb-4">
+    <legend class="h5">Background image</legend>
+
+    @if (options.CurrentImageId is int currentImageId)
+    {
+        <div class="listing-image-current mb-3">
+            <img src="/images/event/@currentImageId" alt="Current background image" />
+            <div class="form-check mt-2">
+                <input type="checkbox" class="form-check-input" id="RemoveBackgroundImage" name="RemoveBackgroundImage" value="true" />
+                <label class="form-check-label" for="RemoveBackgroundImage">Remove the current image</label>
+            </div>
+        </div>
+    }
+
+    <label asp-for="BackgroundImage" class="form-label">
+        @(options.CurrentImageId is null ? "Image (optional)" : "Replace with a new image (optional)")
+    </label>
+    <input asp-for="BackgroundImage" type="file" class="form-control" accept="@EventImageService.AcceptAttribute"
+           aria-describedby="background-image-help" />
+    <div id="background-image-help" class="form-text">
+        Shown behind the event's name on its page and in the quick view.
+        JPEG, PNG or WebP, up to @(EventImageService.MaxBytes / (1024 * 1024)) MB. A wide image (around 1600 × 600) works best.
+    </div>
+    <span asp-validation-for="BackgroundImage" class="text-danger"></span>
+</fieldset>
