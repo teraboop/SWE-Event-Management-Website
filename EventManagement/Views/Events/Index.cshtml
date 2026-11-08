@@ -57,6 +57,16 @@
                        placeholder="Any price" />
             </div>
 
+            <div class="events-filter-field events-filter-check form-check">
+                <input type="checkbox"
+                       id="Filter_OpenToVendors"
+                       name="Filter.OpenToVendors"
+                       value="true"
+                       class="form-check-input"
+                       checked="@Model.Filter.OpenToVendors" />
+                <label for="Filter_OpenToVendors" class="form-check-label">Open to vendors</label>
+            </div>
+
             <div class="events-filter-submit">
                 <button type="submit" class="btn btn-primary">Apply filters</button>
             </div>
@@ -104,6 +114,11 @@
                                 <span aria-hidden="true">●</span>
                                 @eventCard.VenueName, @eventCard.City
                             </p>
+
+                            @if (eventCard.AcceptsVendorApplications)
+                            {
+                                <p class="vendor-open-badge">Open to vendor applications</p>
+                            }
 
                             @if (eventCard.Interests.Count > 0)
                             {

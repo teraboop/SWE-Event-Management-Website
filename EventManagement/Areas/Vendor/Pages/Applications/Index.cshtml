@@ -70,7 +70,7 @@ else
     <p class="text-muted">
         To sell at an event, open the event and choose <strong>Apply to sell at this event</strong>.
         Only events whose organizers accept vendors show that option.
-        <a asp-area="" asp-controller="Events" asp-action="Index">Browse events</a>
+        <a href="@Url.Action("Index", "Events", new { area = "" })?Filter.OpenToVendors=true">Browse events open to vendors</a>
     </p>
 
     <h2 class="h4">Applications</h2>

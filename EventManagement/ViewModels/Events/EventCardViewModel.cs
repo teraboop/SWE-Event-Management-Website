@@ -20,5 +20,8 @@ public class EventCardViewModel
 
     public bool IsSaved { get; set; }
 
+    /// <summary>The organizer has opened vendor applications for this event.</summary>
+    public bool AcceptsVendorApplications { get; set; }
+
     public IReadOnlyList<string> Interests { get; set; } = [];
 }

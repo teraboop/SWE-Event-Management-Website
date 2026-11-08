@@ -13,4 +13,7 @@ public class EventFilterViewModel
     public decimal? MinimumPrice { get; set; }
 
     public decimal? MaximumPrice { get; set; }
+
+    /// <summary>Only show events that are accepting vendor applications.</summary>
+    public bool OpenToVendors { get; set; }
 }

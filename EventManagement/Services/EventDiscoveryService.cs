@@ -65,6 +65,11 @@ public class EventDiscoveryService
                 @event.MinimumPrice <= filter.MaximumPrice.Value);
         }
 
+        if (filter.OpenToVendors)
+        {
+            query = query.Where(@event => @event.AcceptsVendorApplications);
+        }
+
         var userInterestIds = new List<int>();
 
         if (!string.IsNullOrWhiteSpace(userId))
@@ -112,7 +117,8 @@ public class EventDiscoveryService
                     .Select(interest => interest.InterestCategory.Name)
                     .ToList(),
                 IsSaved = userId != null &&
-                    @event.SavedByUsers.Any(savedEvent => savedEvent.UserId == userId)
+                    @event.SavedByUsers.Any(savedEvent => savedEvent.UserId == userId),
+                AcceptsVendorApplications = @event.AcceptsVendorApplications
             })
             .ToListAsync();
 

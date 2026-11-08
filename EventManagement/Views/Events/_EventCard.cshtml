@@ -14,6 +14,11 @@
             @Model.VenueName, @Model.City
         </p>
 
+        @if (Model.AcceptsVendorApplications)
+        {
+            <p class="vendor-open-badge">Open to vendor applications</p>
+        }
+
         @if (Model.Interests.Count > 0)
         {
             <ul class="event-card-tags list-unstyled mb-3">
