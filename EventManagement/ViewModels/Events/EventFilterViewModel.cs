@@ -16,4 +16,7 @@ public class EventFilterViewModel
 
     /// <summary>Only show events that are accepting vendor applications.</summary>
     public bool OpenToVendors { get; set; }
+
+    /// <summary>Only show events that are accepting panel proposals.</summary>
+    public bool OpenToPanels { get; set; }
 }

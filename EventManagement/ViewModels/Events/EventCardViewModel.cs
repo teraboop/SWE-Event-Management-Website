@@ -23,5 +23,8 @@ public class EventCardViewModel
     /// <summary>The organizer has opened vendor applications for this event.</summary>
     public bool AcceptsVendorApplications { get; set; }
 
+    /// <summary>The organizer has opened panel proposals for this event.</summary>
+    public bool AcceptsPanelApplications { get; set; }
+
     public IReadOnlyList<string> Interests { get; set; } = [];
 }

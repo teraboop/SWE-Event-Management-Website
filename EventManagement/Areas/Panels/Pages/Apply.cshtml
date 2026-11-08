@@ -1,0 +1,95 @@
+@page
+@model EventManagement.Areas.Panels.Pages.ApplyModel
+
+@{
+    ViewData["Title"] = $"Propose a panel for {Model.TargetEvent.Title}";
+}
+
+<a asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@Model.TargetEvent.Id"
+   class="btn btn-outline-secondary mb-3">Back to event</a>
+
+<h1>@ViewData["Title"]</h1>
+
+<p class="text-muted">
+    @Model.TargetEvent.StartsAt.LocalDateTime.ToString("dddd, MMMM d, yyyy · h:mm tt")
+    · @Model.TargetEvent.VenueName, @Model.TargetEvent.City
+</p>
+
+@if (Model.BlockedReason is not null)
+{
+    <div class="alert alert-secondary" role="status">
+        @Model.BlockedReason
+        <a asp-page="./Index" class="alert-link">View my panel proposals</a>
+    </div>
+}
+else
+{
+    <p>
+        The event's organizer will review your proposal. If it's approved, the title, description,
+        panelists and length are listed on the event page. Your contact email and note stay private.
+    </p>
+
+    @if (Model.PendingCount > 0)
+    {
+        <p class="text-muted">
+            You have @Model.PendingCount @(Model.PendingCount == 1 ? "proposal" : "proposals") waiting for review at this event.
+        </p>
+    }
+
+    <form method="post">
+        <input type="hidden" asp-for="EventId" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <div class="mb-3">
+            <label asp-for="Input.Title" class="form-label"></label>
+            <input asp-for="Input.Title" class="form-control" maxlength="150" />
+            <span asp-validation-for="Input.Title" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.Description" class="form-label"></label>
+            <textarea asp-for="Input.Description" class="form-control" rows="5" maxlength="2000"></textarea>
+            <span asp-validation-for="Input.Description" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.Panelists" class="form-label"></label>
+            <textarea asp-for="Input.Panelists" class="form-control" rows="4" maxlength="1000"
+                      placeholder="One per line, e.g. Jordan Lee, voice actor"
+                      aria-describedby="panelists-help"></textarea>
+            <div id="panelists-help" class="form-text">One panelist per line, with a short description of each.</div>
+            <span asp-validation-for="Input.Panelists" class="text-danger"></span>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-sm-4">
+                <label asp-for="Input.DurationMinutes" class="form-label"></label>
+                <select asp-for="Input.DurationMinutes" class="form-select">
+                    @foreach (var minutes in PanelApplicationService.DurationOptions)
+                    {
+                        <option value="@minutes">@PanelApplicationService.FormatDuration(minutes)</option>
+                    }
+                </select>
+                <span asp-validation-for="Input.DurationMinutes" class="text-danger"></span>
+            </div>
+            <div class="col-sm-8">
+                <label asp-for="Input.ContactEmail" class="form-label"></label>
+                <input asp-for="Input.ContactEmail" class="form-control" maxlength="256" />
+                <span asp-validation-for="Input.ContactEmail" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.Message" class="form-label"></label>
+            <textarea asp-for="Input.Message" class="form-control" rows="3" maxlength="1000"
+                      placeholder="Anything the organizer should know, e.g. equipment or scheduling needs"></textarea>
+            <span asp-validation-for="Input.Message" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit proposal</button>
+    </form>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

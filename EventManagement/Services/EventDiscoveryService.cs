@@ -1,6 +1,8 @@
 ﻿using EventManagement.Data;
+using EventManagement.Models.Applications;
 using EventManagement.Models.Events;
 using EventManagement.ViewModels.Events;
+using EventManagement.ViewModels.Panels;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventManagement.Services;
@@ -70,6 +72,11 @@ public class EventDiscoveryService
             query = query.Where(@event => @event.AcceptsVendorApplications);
         }
 
+        if (filter.OpenToPanels)
+        {
+            query = query.Where(@event => @event.AcceptsPanelApplications);
+        }
+
         var userInterestIds = new List<int>();
 
         if (!string.IsNullOrWhiteSpace(userId))
@@ -118,7 +125,8 @@ public class EventDiscoveryService
                     .ToList(),
                 IsSaved = userId != null &&
                     @event.SavedByUsers.Any(savedEvent => savedEvent.UserId == userId),
-                AcceptsVendorApplications = @event.AcceptsVendorApplications
+                AcceptsVendorApplications = @event.AcceptsVendorApplications,
+                AcceptsPanelApplications = @event.AcceptsPanelApplications
             })
             .ToListAsync();
 
@@ -176,6 +184,18 @@ public class EventDiscoveryService
                 HasStarted = @event.StartsAt <= now,
                 HasEnded = @event.EndsAt <= now,
                 AcceptsVendorApplications = @event.AcceptsVendorApplications,
+                AcceptsPanelApplications = @event.AcceptsPanelApplications,
+                ApprovedPanels = @event.PanelApplications
+                    .Where(panel => panel.Status == ApplicationStatus.Approved)
+                    .OrderBy(panel => panel.Title)
+                    .Select(panel => new EventPanelViewModel
+                    {
+                        Title = panel.Title,
+                        Description = panel.Description,
+                        Panelists = panel.Panelists,
+                        DurationMinutes = panel.DurationMinutes
+                    })
+                    .ToList(),
                 IsOwnEvent = userId != null && @event.OrganizerId == userId,
                 ExternalWebsiteUrl = @event.ExternalWebsiteUrl,
                 EventCategoryName = @event.EventCategory.Name,

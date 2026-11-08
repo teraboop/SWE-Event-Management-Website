@@ -1,0 +1,16 @@
+@model (bool Vendors, bool Panels)
+
+@* Marks events that are taking vendor applications or panel proposals. Used on every event card and the quick view. *@
+@if (Model.Vendors || Model.Panels)
+{
+    <ul class="open-badges list-unstyled">
+        @if (Model.Vendors)
+        {
+            <li class="open-badge">Open to vendor applications</li>
+        }
+        @if (Model.Panels)
+        {
+            <li class="open-badge">Open to panel proposals</li>
+        }
+    </ul>
+}

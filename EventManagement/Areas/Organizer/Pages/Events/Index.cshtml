@@ -83,6 +83,18 @@ else
                                         <span class="small text-muted ms-1">(closed)</span>
                                     }
                                 </a>
+                                <a asp-page="./Panels" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm text-nowrap">
+                                    Panels
+                                    @if (row.PendingPanelApplications > 0)
+                                    {
+                                        <span class="badge text-bg-warning ms-1">@row.PendingPanelApplications</span>
+                                        <span class="visually-hidden">pending</span>
+                                    }
+                                    else if (!row.AcceptsPanelApplications)
+                                    {
+                                        <span class="small text-muted ms-1">(closed)</span>
+                                    }
+                                </a>
                             </div>
                         </td>
                     </tr>

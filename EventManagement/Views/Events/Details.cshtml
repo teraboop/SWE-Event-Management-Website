@@ -178,6 +178,26 @@
     }
 </section>
 
+@if (Model.IsOwnEvent)
+{
+    @* Organizers don't see the apply buttons on their own event, so tell them where those settings live. *@
+    <section class="card my-4" aria-labelledby="organizer-tools-heading">
+        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h2 id="organizer-tools-heading" class="h5 mb-1">You organize this event</h2>
+                <p class="text-muted mb-0">
+                    Vendor applications are @(Model.AcceptsVendorApplications ? "open" : "closed").
+                    Panel proposals are @(Model.AcceptsPanelApplications ? "open" : "closed").
+                </p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-area="Organizer" asp-page="/Events/Vendors" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">Manage vendors</a>
+                <a asp-area="Organizer" asp-page="/Events/Panels" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">Manage panels</a>
+            </div>
+        </div>
+    </section>
+}
+
 @if (Model.AcceptsVendorApplications && !Model.HasEnded && !Model.IsOwnEvent)
 {
     <section class="my-4" aria-labelledby="vendors-heading">
@@ -226,6 +246,57 @@
                         Apply to sell at this event
                     </a>
                     break;
+            }
+        }
+    </section>
+}
+
+@{
+    var canProposePanel = Model.AcceptsPanelApplications && !Model.HasEnded && !Model.IsOwnEvent;
+}
+@if (Model.ApprovedPanels.Count > 0 || canProposePanel)
+{
+    <section class="my-4" aria-labelledby="panels-heading">
+        <h2 id="panels-heading" class="h4">Panels</h2>
+
+        @foreach (var panel in Model.ApprovedPanels)
+        {
+            <article class="event-panel">
+                <h3 class="h5 mb-1">@panel.Title</h3>
+                <p class="small text-muted mb-2">@EventManagement.Services.PanelApplicationService.FormatDuration(panel.DurationMinutes)</p>
+                <p class="text-prewrap mb-2">@panel.Description</p>
+                <p class="small text-prewrap mb-0"><strong>Panelists:</strong> @panel.Panelists</p>
+            </article>
+        }
+
+        @if (canProposePanel)
+        {
+            @if (User.Identity?.IsAuthenticated != true)
+            {
+                <p>
+                    This event is accepting panel proposals.
+                    <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Model.ReturnUrl">Log in</a>
+                    to propose one.
+                </p>
+            }
+            else
+            {
+                <p>
+                    This event is accepting panel proposals.
+                    @if (Model.PendingPanelProposals > 0)
+                    {
+                        <span>
+                            You have @Model.PendingPanelProposals @(Model.PendingPanelProposals == 1 ? "proposal" : "proposals") waiting for the organizer's review.
+                            <a asp-area="Panels" asp-page="/Index">View my proposals</a>
+                        </span>
+                    }
+                </p>
+                @if (Model.PendingPanelProposals < EventManagement.Services.PanelApplicationService.MaxPendingPerEvent)
+                {
+                    <a asp-area="Panels" asp-page="/Apply" asp-route-eventId="@Model.Id" class="btn btn-outline-primary">
+                        Propose a panel
+                    </a>
+                }
             }
         }
     </section>

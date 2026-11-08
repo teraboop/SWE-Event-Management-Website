@@ -1,0 +1,57 @@
+@model EventManagement.ViewModels.Panels.PanelApplicationReviewItem
+@using EventManagement.Models.Applications
+@using EventManagement.Services
+
+<article class="card mb-3" aria-labelledby="panel-@Model.Id-heading">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+                <h3 id="panel-@Model.Id-heading" class="h5 mb-0">@Model.Title</h3>
+                <div class="small text-muted">
+                    Proposed by @Model.ApplicantUserName on @Model.SubmittedAt.LocalDateTime.ToString("MMM d, yyyy h:mm tt")
+                </div>
+            </div>
+            <partial name="_ApplicationStatusBadge" model="Model.Status" />
+        </div>
+
+        <dl class="row mb-2">
+            <dt class="col-sm-3">Length</dt>
+            <dd class="col-sm-9">@PanelApplicationService.FormatDuration(Model.DurationMinutes)</dd>
+            <dt class="col-sm-3">About</dt>
+            <dd class="col-sm-9 text-prewrap">@Model.Description</dd>
+            <dt class="col-sm-3">Panelists</dt>
+            <dd class="col-sm-9 text-prewrap">@Model.Panelists</dd>
+            <dt class="col-sm-3">Contact</dt>
+            <dd class="col-sm-9">@Model.ContactEmail</dd>
+            @if (!string.IsNullOrWhiteSpace(Model.Message))
+            {
+                <dt class="col-sm-3">Note</dt>
+                <dd class="col-sm-9 text-prewrap">@Model.Message</dd>
+            }
+        </dl>
+
+        @if (Model.Status == ApplicationStatus.Submitted)
+        {
+            <form method="post" action="@Model.ReviewFormAction" asp-antiforgery="true">
+                <input type="hidden" name="applicationId" value="@Model.Id" />
+                <div class="mb-2">
+                    <label for="panel-note-@Model.Id" class="form-label small">Note to the applicant (required to reject)</label>
+                    <textarea id="panel-note-@Model.Id" name="note" class="form-control form-control-sm" rows="2" maxlength="1000"></textarea>
+                </div>
+                <button type="submit" name="approve" value="true" class="btn btn-success btn-sm">Approve</button>
+                <button type="submit" name="approve" value="false" class="btn btn-outline-danger btn-sm ms-1">Reject</button>
+            </form>
+        }
+        else if (Model.DecidedAt is not null)
+        {
+            <p class="small text-muted mb-0">
+                @(Model.Status == ApplicationStatus.Withdrawn ? "Withdrawn by the applicant" : $"{Model.Status} by {Model.ReviewedByName}")
+                on @Model.DecidedAt.Value.LocalDateTime.ToString("MMM d, yyyy")
+                @if (!string.IsNullOrWhiteSpace(Model.ReviewNote))
+                {
+                    <span>— “@Model.ReviewNote”</span>
+                }
+            </p>
+        }
+    </div>
+</article>

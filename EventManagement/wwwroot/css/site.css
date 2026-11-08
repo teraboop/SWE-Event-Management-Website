@@ -345,39 +345,63 @@ body {
   align-items: end;
 }
 
-/* "Open to vendors" checkbox: same height as the inputs so it lines up with them. */
-.events-filter-check.form-check {
+/* "Open to vendors / panels" checkboxes, stacked in one grid cell at the inputs' height. */
+.events-filter-checks {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 2.8rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.events-filter-checks .form-check {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-height: 2.8rem;
-  margin-bottom: 0;
+  min-height: 0;
+  margin: 0;
   padding-left: 0;
   white-space: nowrap;
 }
 
-.events-filter-check .form-check-input {
+.events-filter-checks .form-check-input {
   float: none;
   margin: 0;
 }
 
-.events-filter-check .form-check-label {
+.events-filter-checks .form-check-label {
   color: var(--ink);
   font-size: 0.82rem;
   font-weight: 700;
 }
 
-/* Marks events whose organizers are accepting vendor applications. */
-.vendor-open-badge {
-  align-self: flex-start;
-  display: inline-block;
+/* Marks events whose organizers are accepting vendor applications or panel proposals. */
+.open-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
   margin-bottom: 0.75rem;
+}
+
+.open-badge {
   padding: 0.2rem 0.65rem;
   color: #065f46;
   background-color: #d1fae5;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
+}
+
+/* Approved panels on the event page. */
+.event-panel {
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-alt);
 }
 
 .events-filter-field .form-label {

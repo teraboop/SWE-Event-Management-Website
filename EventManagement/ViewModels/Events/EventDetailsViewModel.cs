@@ -46,6 +46,14 @@ public class EventDetailsViewModel
     /// <summary>The signed-in vendor's current application status for this event, if any.</summary>
     public EventManagement.Models.Applications.ApplicationStatus? VendorApplicationStatus { get; set; }
 
+    public bool AcceptsPanelApplications { get; set; }
+
+    /// <summary>Approved panels, listed publicly on the event page.</summary>
+    public IReadOnlyList<EventManagement.ViewModels.Panels.EventPanelViewModel> ApprovedPanels { get; set; } = [];
+
+    /// <summary>How many of the signed-in user's panel proposals for this event are pending.</summary>
+    public int PendingPanelProposals { get; set; }
+
     public string? ExternalWebsiteUrl { get; set; }
 
     public bool IsSaved { get; set; }

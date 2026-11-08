@@ -1,0 +1,69 @@
+@page
+@model EventManagement.Areas.Panels.Pages.IndexModel
+
+@{
+    ViewData["Title"] = "My panel proposals";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+
+<p class="text-muted">
+    To propose a panel, open an event and choose <strong>Propose a panel</strong>.
+    Only events whose organizers accept panel proposals show that option.
+    <a href="@Url.Action("Index", "Events", new { area = "" })?Filter.OpenToPanels=true">Browse events open to panel proposals</a>
+</p>
+
+@if (Model.Proposals.Count == 0)
+{
+    <p>You haven't proposed any panels yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Panel</th>
+                    <th scope="col">Event</th>
+                    <th scope="col">Submitted</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Organizer's note</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var proposal in Model.Proposals)
+                {
+                    <tr>
+                        <td>@proposal.Title</td>
+                        <td>
+                            <a asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@proposal.EventId">@proposal.EventTitle</a>
+                            <div class="small text-muted">@proposal.EventStartsAt.LocalDateTime.ToString("MMM d, yyyy")</div>
+                        </td>
+                        <td>@proposal.SubmittedAt.LocalDateTime.ToString("MMM d, yyyy")</td>
+                        <td><partial name="_ApplicationStatusBadge" model="proposal.Status" /></td>
+                        <td class="text-prewrap">@proposal.ReviewNote</td>
+                        <td class="text-end">
+                            @if (proposal.Status == ApplicationStatus.Submitted)
+                            {
+                                <form method="post" asp-page-handler="Withdraw" class="d-inline">
+                                    <input type="hidden" name="applicationId" value="@proposal.Id" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Withdraw</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
