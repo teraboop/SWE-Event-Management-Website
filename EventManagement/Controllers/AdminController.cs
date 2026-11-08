@@ -1,4 +1,7 @@
 ﻿using EventManagement.Data;
+using EventManagement.Models.Applications;
+using EventManagement.Models.Vendors;
+using EventManagement.Services;
 using EventManagement.ViewModels.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,10 +14,17 @@ namespace EventManagement.Controllers;
 public class AdminController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ApplicationDbContext _dbContext;
+    private readonly VendorApplicationService _vendorApplicationService;
 
-    public AdminController(UserManager<ApplicationUser> userManager)
+    public AdminController(
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext dbContext,
+        VendorApplicationService vendorApplicationService)
     {
         _userManager = userManager;
+        _dbContext = dbContext;
+        _vendorApplicationService = vendorApplicationService;
     }
 
     [HttpGet]
@@ -30,6 +40,9 @@ public class AdminController : Controller
 
         var model = new AdminIndexViewModel
         {
+            PendingOnlineVendorApplications = await _dbContext.VendorApplications.CountAsync(application =>
+                application.Kind == VendorApplicationKind.OnlineSales &&
+                application.Status == ApplicationStatus.Submitted),
             Users = users
                 .Select(user => new AdminUserRowViewModel
                 {
@@ -80,4 +93,37 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>Review queue for applications to sell merchandise on the website.</summary>
+    [HttpGet]
+    public async Task<IActionResult> VendorApplications()
+    {
+        var reviewAction = Url.Action(nameof(ReviewVendorApplication)) ?? string.Empty;
+        var applications = await _vendorApplicationService.GetReviewQueueAsync(null, HttpContext.RequestAborted);
+        applications.ForEach(application => application.ReviewFormAction = reviewAction);
+
+        return View(applications);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReviewVendorApplication(int applicationId, bool approve, string? note)
+    {
+        var userId = _userManager.GetUserId(User);
+        if (userId is null)
+        {
+            return Challenge();
+        }
+
+        var result = await _vendorApplicationService.ReviewAsync(
+            userId,
+            _userManager.GetUserName(User) ?? "Admin",
+            reviewerIsAdmin: true,
+            applicationId,
+            approve,
+            note,
+            HttpContext.RequestAborted);
+
+        TempData[result.Succeeded ? "StatusMessage" : "ErrorMessage"] = result.Message;
+        return RedirectToAction(nameof(VendorApplications));
+    }
 }

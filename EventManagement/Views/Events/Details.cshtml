@@ -178,6 +178,59 @@
     }
 </section>
 
+@if (Model.AcceptsVendorApplications && !Model.HasEnded && !Model.IsOwnEvent)
+{
+    <section class="my-4" aria-labelledby="vendors-heading">
+        <h2 id="vendors-heading" class="h4">Vendors</h2>
+
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <p>
+                This event is accepting vendor applications.
+                <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Model.ReturnUrl">Log in</a>
+                to apply to sell here.
+            </p>
+        }
+        else if (!Model.HasVendorProfile)
+        {
+            <p>This event is accepting vendor applications. Set up a vendor profile once, then apply with it here and at other events.</p>
+            <a asp-area="Vendor" asp-page="/Applications/Apply" asp-route-eventId="@Model.Id" class="btn btn-outline-primary">
+                Create vendor profile and apply
+            </a>
+        }
+        else
+        {
+            @switch (Model.VendorApplicationStatus)
+            {
+                case EventManagement.Models.Applications.ApplicationStatus.Submitted:
+                    <p>
+                        Your application to sell at this event is waiting for the organizer's review.
+                        <a asp-area="Vendor" asp-page="/Applications/Index">View my applications</a>
+                    </p>
+                    break;
+
+                case EventManagement.Models.Applications.ApplicationStatus.Approved:
+                    <p>You're approved to sell at this event.</p>
+                    break;
+
+                default:
+                    @if (Model.VendorApplicationStatus == EventManagement.Models.Applications.ApplicationStatus.Rejected)
+                    {
+                        <p class="text-muted">Your previous application wasn't accepted. You can apply again.</p>
+                    }
+                    else
+                    {
+                        <p>This event is accepting vendor applications. Your vendor profile is ready to go.</p>
+                    }
+                    <a asp-area="Vendor" asp-page="/Applications/Apply" asp-route-eventId="@Model.Id" class="btn btn-outline-primary">
+                        Apply to sell at this event
+                    </a>
+                    break;
+            }
+        }
+    </section>
+}
+
 @if (Model.Interests.Count > 0)
 {
     <p>

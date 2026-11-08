@@ -1,0 +1,100 @@
+@page
+@model EventManagement.Areas.Vendor.Pages.Applications.ApplyModel
+
+@{
+    ViewData["Title"] = Model.TargetEvent is null ? "Apply to sell online" : $"Apply to sell at {Model.TargetEvent.Title}";
+}
+
+@if (Model.TargetEvent is not null)
+{
+    <a asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@Model.TargetEvent.Id"
+       class="btn btn-outline-secondary mb-3">Back to event</a>
+}
+else
+{
+    <a asp-page="./Index" class="btn btn-outline-secondary mb-3">Back to my applications</a>
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+}
+
+@if (Model.TargetEvent is not null)
+{
+    <p class="text-muted">
+        @Model.TargetEvent.StartsAt.LocalDateTime.ToString("dddd, MMMM d, yyyy · h:mm tt")
+        · @Model.TargetEvent.VenueName, @Model.TargetEvent.City
+    </p>
+    <p>The event's organizer will review your application.</p>
+}
+else
+{
+    <p>Approved vendors can list merchandise for sale on the website. An admin will review your application.</p>
+}
+
+<section class="card mb-4" aria-labelledby="applying-as-heading">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+            <h2 id="applying-as-heading" class="h5 card-title">Applying as @Model.Profile.BusinessName</h2>
+            <a asp-page="/Profile" asp-route-returnUrl="@(Request.Path + Request.QueryString)"
+               class="btn btn-outline-secondary btn-sm text-nowrap">Edit profile</a>
+        </div>
+        <p class="small text-muted mb-3">These details from your vendor profile are sent with the application.</p>
+        <dl class="row mb-0">
+            <dt class="col-sm-3">What you sell</dt>
+            <dd class="col-sm-9">@Model.Profile.ProductsOffered</dd>
+            <dt class="col-sm-3">About</dt>
+            <dd class="col-sm-9 text-prewrap">@Model.Profile.Description</dd>
+            <dt class="col-sm-3">Contact</dt>
+            <dd class="col-sm-9">@Model.Profile.ContactEmail</dd>
+            @if (!string.IsNullOrWhiteSpace(Model.Profile.WebsiteUrl))
+            {
+                <dt class="col-sm-3">Website</dt>
+                <dd class="col-sm-9">@Model.Profile.WebsiteUrl</dd>
+            }
+        </dl>
+    </div>
+</section>
+
+@if (Model.CurrentStatus == ApplicationStatus.Submitted)
+{
+    <div class="alert alert-info" role="status">
+        You already have a pending application for this.
+        <a asp-page="./Index" class="alert-link">View my applications</a>
+    </div>
+}
+else if (Model.CurrentStatus == ApplicationStatus.Approved)
+{
+    <div class="alert alert-success" role="status">
+        You're already approved for this.
+        <a asp-page="./Index" class="alert-link">View my applications</a>
+    </div>
+}
+else if (Model.TargetEvent is { IsAcceptingApplications: false })
+{
+    <div class="alert alert-secondary" role="status">This event isn't accepting vendor applications.</div>
+}
+else
+{
+    @if (Model.CurrentStatus == ApplicationStatus.Rejected)
+    {
+        <p class="text-muted">Your previous application was rejected. You can update your profile and apply again.</p>
+    }
+
+    <form method="post">
+        <input type="hidden" asp-for="EventId" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <div class="mb-3">
+            <label asp-for="Message" class="form-label"></label>
+            <textarea asp-for="Message" class="form-control" rows="4" maxlength="1000"
+                      placeholder="Anything the reviewer should know, e.g. booth needs or past events you've sold at"></textarea>
+            <span asp-validation-for="Message" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit application</button>
+    </form>
+}

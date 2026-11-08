@@ -1,6 +1,7 @@
 ﻿using EventManagement.Models.Commerce;
 using EventManagement.Models.Events;
 using EventManagement.Models.Profile;
+using EventManagement.Models.Vendors;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +27,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Order> Orders => Set<Order>();
 
     public DbSet<Ticket> Tickets => Set<Ticket>();
+
+    public DbSet<VendorProfile> VendorProfiles => Set<VendorProfile>();
+
+    public DbSet<VendorApplication> VendorApplications => Set<VendorApplication>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -298,6 +303,79 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany(ticketType => ticketType.Tickets)
                 .HasForeignKey(ticket => ticket.EventTicketTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<VendorProfile>(entity =>
+        {
+            entity.ToTable("VendorProfiles");
+
+            entity.Property(profile => profile.BusinessName).HasMaxLength(150).IsRequired();
+            entity.Property(profile => profile.ProductsOffered).HasMaxLength(500).IsRequired();
+            entity.Property(profile => profile.Description).HasMaxLength(2000).IsRequired();
+            entity.Property(profile => profile.ContactEmail).HasMaxLength(256).IsRequired();
+            entity.Property(profile => profile.WebsiteUrl).HasMaxLength(2048);
+
+            // One vendor identity per account.
+            entity.HasIndex(profile => profile.OwnerUserId)
+                .IsUnique();
+
+            entity.HasOne(profile => profile.Owner)
+                .WithMany()
+                .HasForeignKey(profile => profile.OwnerUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<VendorApplication>(entity =>
+        {
+            entity.ToTable("VendorApplications", table =>
+            {
+                // Event applications must name an event; online ones must not.
+                table.HasCheckConstraint(
+                    "CK_VendorApplications_EventMatchesKind",
+                    "([Kind] = 1 AND [EventId] IS NOT NULL) OR ([Kind] = 0 AND [EventId] IS NULL)");
+            });
+
+            entity.Property(application => application.Kind).HasConversion<int>();
+            entity.Property(application => application.Status).HasConversion<int>();
+
+            entity.Property(application => application.BusinessName).HasMaxLength(150).IsRequired();
+            entity.Property(application => application.ProductsOffered).HasMaxLength(500).IsRequired();
+            entity.Property(application => application.Description).HasMaxLength(2000).IsRequired();
+            entity.Property(application => application.ContactEmail).HasMaxLength(256).IsRequired();
+            entity.Property(application => application.WebsiteUrl).HasMaxLength(2048);
+            entity.Property(application => application.Message).HasMaxLength(1000);
+            entity.Property(application => application.ReviewedByUserId).HasMaxLength(450);
+            entity.Property(application => application.ReviewedByName).HasMaxLength(256);
+            entity.Property(application => application.ReviewNote).HasMaxLength(1000);
+
+            // At most one pending application per vendor for the same thing
+            // (online sales, or one particular event). SQL Server treats NULL
+            // EventIds as equal in a unique index, so this also covers online
+            // applications. Decided applications are outside the filter, so
+            // vendors can reapply after a rejection.
+            entity.HasIndex(application => new
+            {
+                application.VendorProfileId,
+                application.Kind,
+                application.EventId
+            })
+            .IsUnique()
+            .HasFilter("[Status] = 0")
+            .HasDatabaseName("IX_VendorApplications_OnePending");
+
+            // Review queues: pending applications by kind or by event.
+            entity.HasIndex(application => new { application.Kind, application.Status });
+            entity.HasIndex(application => new { application.EventId, application.Status });
+
+            entity.HasOne(application => application.VendorProfile)
+                .WithMany(profile => profile.Applications)
+                .HasForeignKey(application => application.VendorProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(application => application.Event)
+                .WithMany(@event => @event.VendorApplications)
+                .HasForeignKey(application => application.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

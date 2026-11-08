@@ -1,0 +1,19 @@
+@model EventManagement.Models.Applications.ApplicationStatus
+@using EventManagement.Models.Applications
+
+@* One place that decides how a status looks, shared by vendors, organizers and admins. *@
+@switch (Model)
+{
+    case ApplicationStatus.Submitted:
+        <span class="badge text-bg-warning">Pending</span>
+        break;
+    case ApplicationStatus.Approved:
+        <span class="badge text-bg-success">Approved</span>
+        break;
+    case ApplicationStatus.Rejected:
+        <span class="badge text-bg-danger">Rejected</span>
+        break;
+    default:
+        <span class="badge text-bg-secondary">Withdrawn</span>
+        break;
+}

@@ -15,17 +15,20 @@ public class EventsController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _dbContext;
     private readonly TicketPurchaseService _ticketPurchaseService;
+    private readonly VendorApplicationService _vendorApplicationService;
 
     public EventsController(
         EventDiscoveryService eventDiscoveryService,
         UserManager<ApplicationUser> userManager,
         ApplicationDbContext dbContext,
-        TicketPurchaseService ticketPurchaseService)
+        TicketPurchaseService ticketPurchaseService,
+        VendorApplicationService vendorApplicationService)
     {
         _eventDiscoveryService = eventDiscoveryService;
         _userManager = userManager;
         _dbContext = dbContext;
         _ticketPurchaseService = ticketPurchaseService;
+        _vendorApplicationService = vendorApplicationService;
     }
 
     [HttpGet]
@@ -56,6 +59,13 @@ public class EventsController : Controller
         if (UserId is not null)
         {
             model.TicketsHeld = await _ticketPurchaseService.CountTicketsHeldAsync(UserId, id);
+
+            if (model.AcceptsVendorApplications)
+            {
+                var vendorState = await _vendorApplicationService.GetEventApplicationStateAsync(UserId, id);
+                model.HasVendorProfile = vendorState.HasProfile;
+                model.VendorApplicationStatus = vendorState.LatestStatus;
+            }
         }
 
         return View(model);

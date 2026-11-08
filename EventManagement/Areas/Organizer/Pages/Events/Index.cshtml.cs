@@ -1,4 +1,5 @@
 using EventManagement.Data;
+using EventManagement.Models.Applications;
 using EventManagement.Models.Events;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -52,7 +53,10 @@ public class IndexModel : PageModel
                 TicketSalesMode = @event.TicketSalesMode,
                 TicketsSold = @event.TicketTypes.Sum(ticketType => ticketType.QuantitySold),
                 TicketCapacity = @event.TicketTypes.Sum(ticketType => ticketType.QuantityAvailable),
-                OrganizerName = @event.Organizer.UserName ?? string.Empty
+                OrganizerName = @event.Organizer.UserName ?? string.Empty,
+                AcceptsVendorApplications = @event.AcceptsVendorApplications,
+                PendingVendorApplications = @event.VendorApplications
+                    .Count(application => application.Status == ApplicationStatus.Submitted)
             })
             .ToListAsync();
     }
@@ -74,5 +78,9 @@ public class IndexModel : PageModel
         public int TicketCapacity { get; set; }
 
         public string OrganizerName { get; set; } = string.Empty;
+
+        public bool AcceptsVendorApplications { get; set; }
+
+        public int PendingVendorApplications { get; set; }
     }
 }

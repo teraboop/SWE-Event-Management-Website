@@ -1022,3 +1022,8 @@ body {
     gap: 0.65rem;
   }
 }
+
+/* Keep line breaks in user-written text such as vendor descriptions and review notes. */
+.text-prewrap {
+  white-space: pre-line;
+}

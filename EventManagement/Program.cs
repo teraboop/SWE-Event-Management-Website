@@ -16,6 +16,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddScoped<EventDiscoveryService>();
 builder.Services.AddScoped<TicketPurchaseService>();
+builder.Services.AddScoped<VendorApplicationService>();
 builder.Services.TryAddSingleton(TimeProvider.System);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();

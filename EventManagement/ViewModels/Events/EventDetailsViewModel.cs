@@ -36,6 +36,16 @@ public class EventDetailsViewModel
     /// <summary>Tickets the signed-in user already holds for this event.</summary>
     public int TicketsHeld { get; set; }
 
+    public bool HasEnded { get; set; }
+
+    public bool AcceptsVendorApplications { get; set; }
+
+    /// <summary>Whether the signed-in user has a vendor profile to apply with.</summary>
+    public bool HasVendorProfile { get; set; }
+
+    /// <summary>The signed-in vendor's current application status for this event, if any.</summary>
+    public EventManagement.Models.Applications.ApplicationStatus? VendorApplicationStatus { get; set; }
+
     public string? ExternalWebsiteUrl { get; set; }
 
     public bool IsSaved { get; set; }

@@ -1,0 +1,63 @@
+@page "{id:int}"
+@model EventManagement.Areas.Organizer.Pages.Events.VendorsModel
+@using EventManagement.Models.Applications
+
+@{
+    ViewData["Title"] = "Vendors";
+    var pending = Model.Applications.Where(application => application.Status == ApplicationStatus.Submitted).ToList();
+    var decided = Model.Applications.Where(application => application.Status != ApplicationStatus.Submitted).ToList();
+}
+
+<a asp-page="./Index" class="btn btn-outline-secondary mb-3">Back to events</a>
+
+<h1>Vendors for @Model.EventTitle</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+
+<section class="card mb-4" aria-labelledby="accepting-heading">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h2 id="accepting-heading" class="h5 mb-1">Vendor applications are @(Model.AcceptsVendorApplications ? "open" : "closed")</h2>
+            <p class="text-muted mb-0">
+                @(Model.AcceptsVendorApplications
+                    ? "Vendors see an \"Apply to sell at this event\" button on the event page."
+                    : "Open applications to let vendors apply to sell at this event.")
+            </p>
+        </div>
+        <form method="post" asp-page-handler="SetAccepting" asp-route-id="@Model.EventId">
+            <input type="hidden" name="accepting" value="@(Model.AcceptsVendorApplications ? "false" : "true")" />
+            <button type="submit" class="btn @(Model.AcceptsVendorApplications ? "btn-outline-secondary" : "btn-primary")">
+                @(Model.AcceptsVendorApplications ? "Close applications" : "Open applications")
+            </button>
+        </form>
+    </div>
+</section>
+
+<h2 class="h4">Pending (@pending.Count)</h2>
+@if (pending.Count == 0)
+{
+    <p>No applications are waiting for review.</p>
+}
+else
+{
+    @foreach (var application in pending)
+    {
+        <partial name="_VendorApplicationReview" model="application" />
+    }
+}
+
+@if (decided.Count > 0)
+{
+    <h2 class="h4 mt-4">Decided</h2>
+    @foreach (var application in decided)
+    {
+        <partial name="_VendorApplicationReview" model="application" />
+    }
+}

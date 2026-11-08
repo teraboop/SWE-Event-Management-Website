@@ -168,6 +168,8 @@ public class EventDiscoveryService
                     })
                     .ToList(),
                 HasStarted = @event.StartsAt <= now,
+                HasEnded = @event.EndsAt <= now,
+                AcceptsVendorApplications = @event.AcceptsVendorApplications,
                 IsOwnEvent = userId != null && @event.OrganizerId == userId,
                 ExternalWebsiteUrl = @event.ExternalWebsiteUrl,
                 EventCategoryName = @event.EventCategory.Name,
