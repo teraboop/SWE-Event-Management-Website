@@ -19,7 +19,7 @@
 | 5. Rewards Program | Not implemented | No |
 | 6. Event and Email Notifications | Not implemented | No |
 | 7. Browse Vendor Merchandise | Not implemented | No |
-| 8. Applications for Events, Panels, or Vendors | Vendor Implemented | No |
+| 8. Applications for Events, Panels, or Vendors | Implemented | Yes |
 | 9. Two-Factor Authentication | Implemented | Yes |
 | 10. Validate Ticket Purchase Eligibility | Not implemented | No |
 | 11. AI Assistant Chatbot | Not implemented | No |
