@@ -263,12 +263,10 @@ body {
   border-radius: var(--radius);
 }
 
-<<<<<<< HEAD
 /* Quantity box beside the buy button on the event Details page. */
 .ticket-quantity {
     width: 5rem;
 }
-=======
 /* Events page */
 
 .events-page {
@@ -1023,5 +1021,4 @@ body {
     flex-direction: column;
     gap: 0.65rem;
   }
->>>>>>> origin/master
 }
