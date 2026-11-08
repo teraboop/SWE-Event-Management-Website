@@ -35,6 +35,70 @@ body {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #6366f1;
 }
 
+/* Checkboxes: Bootstrap's default border is too faint on white. */
+.form-check-input {
+  border: 2px solid #6b7280;
+}
+
+.form-check-input:checked {
+  background-color: var(--brand);
+  border-color: var(--brand);
+}
+
+/* Interest picker: large toggle tiles instead of small checkboxes. */
+.interest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.75rem;
+}
+
+.interest-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 2px solid #d1d5db;
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  color: var(--ink);
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.interest-option:hover {
+  border-color: var(--brand);
+}
+
+.interest-option-box {
+  flex: none;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 2px solid #6b7280;
+  border-radius: 0.35rem;
+  background-color: var(--surface);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 0.9rem;
+}
+
+.btn-check:checked + .interest-option {
+  border-color: var(--brand);
+  background-color: var(--brand-soft);
+  color: var(--brand-hover);
+}
+
+.btn-check:checked + .interest-option .interest-option-box {
+  border-color: var(--brand);
+  background-color: var(--brand);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+}
+
+.btn-check:focus-visible + .interest-option {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #6366f1;
+}
+
 .btn-primary {
   --bs-btn-bg: var(--brand);
   --bs-btn-border-color: var(--brand);
