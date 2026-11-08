@@ -6,7 +6,7 @@
 | --- | --- |
 | Sprint 2 | October 5, 2026 |
 | Sprint 3 | October 19, 2026 |
-| Sprint 4 | TBD |
+| Sprint 4 | November 9, 2026 |
 
 ## System requirements
 
@@ -19,7 +19,7 @@
 | 5. Rewards Program | Not implemented | No |
 | 6. Event and Email Notifications | Not implemented | No |
 | 7. Browse Vendor Merchandise | Not implemented | No |
-| 8. Applications for Events, Panels, or Vendors | Not implemented | No |
+| 8. Applications for Events, Panels, or Vendors | Vendor Implemented | No |
 | 9. Two-Factor Authentication | Implemented | Yes |
 | 10. Validate Ticket Purchase Eligibility | Not implemented | No |
 | 11. AI Assistant Chatbot | Not implemented | No |
