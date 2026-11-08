@@ -23,24 +23,27 @@
     }
     else
     {
-        <div class="mb-3">
-            @foreach (var interest in Model.AvailableInterests)
-            {
-                var isSelected = Model.SelectedInterestIds.Contains(interest.Id);
+        <fieldset class="mb-4">
+            <legend class="visually-hidden">Interests</legend>
+            <div class="interest-grid">
+                @foreach (var interest in Model.AvailableInterests)
+                {
+                    var isSelected = Model.SelectedInterestIds.Contains(interest.Id);
 
-                <div class="form-check">
-                    <input class="form-check-input"
+                    <input class="btn-check"
                            type="checkbox"
+                           autocomplete="off"
                            id="interest-@interest.Id"
                            name="SelectedInterestIds"
                            value="@interest.Id"
                            checked="@(isSelected ? "checked" : null)" />
-                    <label class="form-check-label" for="interest-@interest.Id">
-                        @interest.Name
+                    <label class="interest-option" for="interest-@interest.Id">
+                        <span class="interest-option-box" aria-hidden="true"></span>
+                        <span>@interest.Name</span>
                     </label>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        </fieldset>
 
         <button type="submit" class="btn btn-primary">Save interests</button>
     }

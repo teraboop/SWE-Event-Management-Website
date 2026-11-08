@@ -5,79 +5,126 @@
     var eventListReturnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
 }
 
-<h1>Events</h1>
+<div class="events-page">
+    <header class="events-page-header">
+        <p class="events-page-eyebrow">Upcoming events</p>
+        <h1>Find your next event</h1>
+        <p class="events-page-lead">
+            Browse upcoming conventions, narrow the list to what matters to you, and save your favorites for later.
+        </p>
+    </header>
 
-<form method="get" class="row g-3 mb-4">
-    <div class="col-md-3">
-        <label asp-for="Filter.InterestCategoryId" class="form-label">Interest</label>
-        <select asp-for="Filter.InterestCategoryId" class="form-select">
-            <option value="">All interests</option>
-            @foreach (var category in Model.InterestCategories)
+    <section class="events-filter-panel" aria-labelledby="events-filter-heading">
+        <div class="events-filter-header">
+            <div>
+                <p class="events-filter-kicker">Discover</p>
+                <h2 id="events-filter-heading">Find your next event</h2>
+            </div>
+            <a asp-controller="Events" asp-action="Index" class="events-clear-filters">
+                Clear filters
+            </a>
+        </div>
+
+        <form method="get" class="events-filter-form">
+            <div class="events-filter-field">
+                <label asp-for="Filter.InterestCategoryId" class="form-label">Interest</label>
+                <select asp-for="Filter.InterestCategoryId" class="form-select">
+                    <option value="">All interests</option>
+                    @foreach (var category in Model.InterestCategories)
+                    {
+                        <option value="@category.Id">@category.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="events-filter-field">
+                <label asp-for="Filter.City" class="form-label">City</label>
+                <input asp-for="Filter.City" class="form-control" placeholder="Any city" />
+            </div>
+
+            <div class="events-filter-field">
+                <label asp-for="Filter.StartsAfter" class="form-label">Starts after</label>
+                <input asp-for="Filter.StartsAfter" type="date" class="form-control" />
+            </div>
+
+            <div class="events-filter-field">
+                <label asp-for="Filter.MaximumPrice" class="form-label">Maximum price</label>
+                <input asp-for="Filter.MaximumPrice"
+                       type="number"
+                       min="0"
+                       step="0.01"
+                       class="form-control"
+                       placeholder="Any price" />
+            </div>
+
+            <div class="events-filter-submit">
+                <button type="submit" class="btn btn-primary">Apply filters</button>
+            </div>
+        </form>
+    </section>
+
+    <div class="events-results-header" aria-live="polite">
+        <div>
+            <p class="events-results-kicker">Browse conventions</p>
+            <h2>@Model.Events.Count @(Model.Events.Count == 1 ? "event" : "events") found</h2>
+        </div>
+        <p>Showing published upcoming events</p>
+    </div>
+
+    @if (Model.Events.Count == 0)
+    {
+        <div class="events-empty-state">
+            <span class="events-empty-icon" aria-hidden="true">✦</span>
+            <h2>No matching events found</h2>
+            <p>Try changing your city, date, interest, or price to discover more upcoming events.</p>
+            <a asp-controller="Events" asp-action="Index" class="btn btn-primary">View all events</a>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+            @foreach (var eventCard in Model.Events)
             {
-                <option value="@category.Id">@category.Name</option>
-            }
-        </select>
-    </div>
-
-    <div class="col-md-3">
-        <label asp-for="Filter.City" class="form-label">City</label>
-        <input asp-for="Filter.City" class="form-control" />
-    </div>
-
-    <div class="col-md-2">
-        <label asp-for="Filter.StartsAfter" class="form-label">Starts after</label>
-        <input asp-for="Filter.StartsAfter" type="date" class="form-control" />
-    </div>
-
-    <div class="col-md-2">
-        <label asp-for="Filter.MaximumPrice" class="form-label">Maximum price</label>
-        <input asp-for="Filter.MaximumPrice" type="number" min="0" step="0.01" class="form-control" />
-    </div>
-
-    <div class="col-md-2 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-    </div>
-</form>
-
-@if (Model.Events.Count == 0)
-{
-    <p>No matching upcoming events were found.</p>
-}
-else
-{
-    <h2 class="visually-hidden">Results</h2>
-
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-        @foreach (var eventCard in Model.Events)
-        {
-            <div class="col">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="card-title h5">@eventCard.Title</h2>
-
-                        <p class="card-text">
-                            @eventCard.StartsAt.LocalDateTime.ToString("MMMM d, yyyy h:mm tt")
-                        </p>
-
-                        <p class="card-text">
-                            @eventCard.VenueName, @eventCard.City
-                        </p>
-
-                        <p class="card-text">
-                            @(eventCard.MinimumPrice == 0
-                                ? "Free"
-                                : $"From {eventCard.MinimumPrice:C}")
-                        </p>
-
-                        @if (eventCard.Interests.Count > 0)
-                        {
-                            <p class="card-text">
-                                @string.Join(" · ", eventCard.Interests)
+                <div class="col">
+                    <article class="events-result-card h-100">
+                        <div class="events-result-card-body">
+                            <p class="events-result-date">
+                                @eventCard.StartsAt.LocalDateTime.ToString("ddd, MMM d, yyyy · h:mm tt")
                             </p>
-                        }
-                        <div class="d-flex gap-2 mt-3">
+
+                            <h2 class="events-result-title">
+                                <a asp-controller="Events"
+                                   asp-action="Details"
+                                   asp-route-id="@eventCard.Id">
+                                    @eventCard.Title
+                                </a>
+                            </h2>
+
+                            <p class="events-result-location">
+                                <span aria-hidden="true">●</span>
+                                @eventCard.VenueName, @eventCard.City
+                            </p>
+
+                            @if (eventCard.Interests.Count > 0)
+                            {
+                                <ul class="events-result-tags list-unstyled">
+                                    @foreach (var interest in eventCard.Interests)
+                                    {
+                                        <li>@interest</li>
+                                    }
+                                </ul>
+                            }
+
+                            <p class="events-result-price">
+                                @(eventCard.MinimumPrice == 0
+                                    ? "Free"
+                                    : $"From {eventCard.MinimumPrice:C}")
+                            </p>
+                        </div>
+
+                        <div class="events-card-actions">
                             <button type="button"
-                                    class="btn btn-primary event-summary-button"
+                                    class="btn btn-outline-primary event-summary-button"
                                     data-summary-url="@Url.Action("Summary", "Events", new {
                                         id = eventCard.Id,
                                         returnUrl = eventListReturnUrl
@@ -89,7 +136,7 @@ else
                                asp-action="Details"
                                asp-route-id="@eventCard.Id"
                                class="btn btn-primary">
-                                View full details
+                                View details
                             </a>
 
                             <partial name="_SaveEventButton"
@@ -100,33 +147,34 @@ else
                                          ReturnUrl = eventListReturnUrl
                                      })" />
                         </div>
-                    </div>
+                    </article>
                 </div>
-            </div>
-        }
-    </div>
-    <div id="event-summary-modal-host"></div>
+            }
+        </div>
 
-    @section Scripts {
-        <script>
-            document.querySelectorAll(".event-summary-button").forEach(button => {
-                button.addEventListener("click", async () => {
-                    const response = await fetch(button.dataset.summaryUrl);
+        <div id="event-summary-modal-host"></div>
 
-                    if (!response.ok) {
-                        alert("Unable to load the event summary.");
-                        return;
-                    }
+        @section Scripts {
+            <script>
+                document.querySelectorAll(".event-summary-button").forEach(button => {
+                    button.addEventListener("click", async () => {
+                        const response = await fetch(button.dataset.summaryUrl);
 
-                    const modalHost = document.getElementById("event-summary-modal-host");
-                    modalHost.innerHTML = await response.text();
+                        if (!response.ok) {
+                            alert("Unable to load the event summary.");
+                            return;
+                        }
 
-                    const modalElement = document.getElementById("eventSummaryModal");
-                    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                        const modalHost = document.getElementById("event-summary-modal-host");
+                        modalHost.innerHTML = await response.text();
 
-                    modal.show();
+                        const modalElement = document.getElementById("eventSummaryModal");
+                        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+
+                        modal.show();
+                    });
                 });
-            });
-        </script>
+            </script>
+        }
     }
-}
+</div>
