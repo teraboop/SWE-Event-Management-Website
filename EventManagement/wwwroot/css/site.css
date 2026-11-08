@@ -340,9 +340,44 @@ body {
 
 .events-filter-form {
   display: grid;
-  grid-template-columns: 1.2fr 1.2fr 1fr 1fr auto;
+  grid-template-columns: 1.2fr 1.2fr 1fr 1fr auto auto;
   gap: 0.9rem;
   align-items: end;
+}
+
+/* "Open to vendors" checkbox: same height as the inputs so it lines up with them. */
+.events-filter-check.form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.8rem;
+  margin-bottom: 0;
+  padding-left: 0;
+  white-space: nowrap;
+}
+
+.events-filter-check .form-check-input {
+  float: none;
+  margin: 0;
+}
+
+.events-filter-check .form-check-label {
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* Marks events whose organizers are accepting vendor applications. */
+.vendor-open-badge {
+  align-self: flex-start;
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  padding: 0.2rem 0.65rem;
+  color: #065f46;
+  background-color: #d1fae5;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .events-filter-field .form-label {
@@ -1021,4 +1056,9 @@ body {
     flex-direction: column;
     gap: 0.65rem;
   }
+}
+
+/* Keep line breaks in user-written text such as vendor descriptions and review notes. */
+.text-prewrap {
+  white-space: pre-line;
 }

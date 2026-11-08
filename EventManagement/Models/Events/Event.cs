@@ -83,4 +83,12 @@ public class Event
     public string? ExternalWebsiteUrl { get; set; }
 
     public ICollection<EventInterest> Interests { get; set; } = [];
+
+    /// <summary>
+    /// Organizer opt-in. Vendors can only apply to sell at events that have
+    /// this turned on, so organizers don't get applications they didn't ask for.
+    /// </summary>
+    public bool AcceptsVendorApplications { get; set; }
+
+    public ICollection<Vendors.VendorApplication> VendorApplications { get; set; } = [];
 }

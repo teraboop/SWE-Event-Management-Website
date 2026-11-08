@@ -3,6 +3,8 @@ namespace EventManagement.ViewModels.Admin;
 public class AdminIndexViewModel
 {
     public List<AdminUserRowViewModel> Users { get; set; } = [];
+
+    public int PendingOnlineVendorApplications { get; set; }
 }
 
 public class AdminUserRowViewModel

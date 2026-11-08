@@ -65,6 +65,11 @@ public class EventDiscoveryService
                 @event.MinimumPrice <= filter.MaximumPrice.Value);
         }
 
+        if (filter.OpenToVendors)
+        {
+            query = query.Where(@event => @event.AcceptsVendorApplications);
+        }
+
         var userInterestIds = new List<int>();
 
         if (!string.IsNullOrWhiteSpace(userId))
@@ -112,7 +117,8 @@ public class EventDiscoveryService
                     .Select(interest => interest.InterestCategory.Name)
                     .ToList(),
                 IsSaved = userId != null &&
-                    @event.SavedByUsers.Any(savedEvent => savedEvent.UserId == userId)
+                    @event.SavedByUsers.Any(savedEvent => savedEvent.UserId == userId),
+                AcceptsVendorApplications = @event.AcceptsVendorApplications
             })
             .ToListAsync();
 
@@ -168,6 +174,8 @@ public class EventDiscoveryService
                     })
                     .ToList(),
                 HasStarted = @event.StartsAt <= now,
+                HasEnded = @event.EndsAt <= now,
+                AcceptsVendorApplications = @event.AcceptsVendorApplications,
                 IsOwnEvent = userId != null && @event.OrganizerId == userId,
                 ExternalWebsiteUrl = @event.ExternalWebsiteUrl,
                 EventCategoryName = @event.EventCategory.Name,

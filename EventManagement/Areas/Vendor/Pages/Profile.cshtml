@@ -1,0 +1,61 @@
+@page
+@model EventManagement.Areas.Vendor.Pages.ProfileModel
+
+@{
+    ViewData["Title"] = Model.IsNew ? "Create vendor profile" : "Vendor profile";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p class="text-muted">
+    This is your vendor identity on Nostalgia Events. Your applications to sell online
+    and at events use these details, so you only have to enter them once.
+</p>
+
+<form method="post">
+    <input type="hidden" asp-for="ReturnUrl" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <div class="mb-3">
+        <label asp-for="Input.BusinessName" class="form-label"></label>
+        <input asp-for="Input.BusinessName" class="form-control" maxlength="150" />
+        <span asp-validation-for="Input.BusinessName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.ProductsOffered" class="form-label"></label>
+        <textarea asp-for="Input.ProductsOffered" class="form-control" rows="2" maxlength="500"
+                  placeholder="e.g. Handmade candles, soaps and gift sets"></textarea>
+        <span asp-validation-for="Input.ProductsOffered" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.Description" class="form-label"></label>
+        <textarea asp-for="Input.Description" class="form-control" rows="5" maxlength="2000"
+                  placeholder="Who you are, how long you've been operating, what makes your business stand out"></textarea>
+        <span asp-validation-for="Input.Description" class="text-danger"></span>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label asp-for="Input.ContactEmail" class="form-label"></label>
+            <input asp-for="Input.ContactEmail" class="form-control" maxlength="256" />
+            <span asp-validation-for="Input.ContactEmail" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Input.WebsiteUrl" class="form-label"></label>
+            <input asp-for="Input.WebsiteUrl" class="form-control" type="url" maxlength="2048"
+                   placeholder="https://example.com" />
+            <span asp-validation-for="Input.WebsiteUrl" class="text-danger"></span>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">@(Model.IsNew ? "Create profile" : "Save profile")</button>
+    @if (!Model.IsNew)
+    {
+        <a asp-page="/Applications/Index" class="btn btn-outline-secondary ms-2">My applications</a>
+    }
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

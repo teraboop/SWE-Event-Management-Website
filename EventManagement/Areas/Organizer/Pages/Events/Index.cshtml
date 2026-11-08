@@ -69,7 +69,21 @@ else
                             }
                         </td>
                         <td class="text-end">
-                            <a asp-page="./Ticketing" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm">Ticket settings</a>
+                            <div class="d-inline-flex gap-2">
+                                <a asp-page="./Ticketing" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm text-nowrap">Ticket settings</a>
+                                <a asp-page="./Vendors" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm text-nowrap">
+                                    Vendors
+                                    @if (row.PendingVendorApplications > 0)
+                                    {
+                                        <span class="badge text-bg-warning ms-1">@row.PendingVendorApplications</span>
+                                        <span class="visually-hidden">pending</span>
+                                    }
+                                    else if (!row.AcceptsVendorApplications)
+                                    {
+                                        <span class="small text-muted ms-1">(closed)</span>
+                                    }
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 }

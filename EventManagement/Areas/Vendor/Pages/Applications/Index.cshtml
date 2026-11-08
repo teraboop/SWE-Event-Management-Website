@@ -1,0 +1,132 @@
+@page
+@model EventManagement.Areas.Vendor.Pages.Applications.IndexModel
+
+@{
+    ViewData["Title"] = "My vendor applications";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+
+@if (Model.Profile is null)
+{
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h5 card-title">Become a vendor</h2>
+            <p class="card-text">
+                Create a vendor profile with your business details. You can then apply to sell
+                merchandise on the website, or to sell at individual events.
+            </p>
+            <a asp-page="/Profile" class="btn btn-primary">Create vendor profile</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <section class="card h-100" aria-labelledby="profile-heading">
+                <div class="card-body">
+                    <h2 id="profile-heading" class="h5 card-title">@Model.Profile.BusinessName</h2>
+                    <p class="card-text text-muted">@Model.Profile.ProductsOffered</p>
+                    <a asp-page="/Profile" class="btn btn-outline-secondary btn-sm">Edit vendor profile</a>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-6">
+            <section class="card h-100" aria-labelledby="online-heading">
+                <div class="card-body">
+                    <h2 id="online-heading" class="h5 card-title">Selling online</h2>
+                    @switch (Model.OnlineSalesStatus)
+                    {
+                        case ApplicationStatus.Approved:
+                            <p class="card-text">You're approved to sell merchandise on the website.</p>
+                            break;
+                        case ApplicationStatus.Submitted:
+                            <p class="card-text">Your application is waiting for an admin to review it.</p>
+                            break;
+                        case ApplicationStatus.Rejected:
+                            <p class="card-text">Your last application was rejected. You can apply again.</p>
+                            <a asp-page="./Apply" class="btn btn-primary btn-sm">Apply again</a>
+                            break;
+                        default:
+                            <p class="card-text">Apply to list your merchandise for sale on the website.</p>
+                            <a asp-page="./Apply" class="btn btn-primary btn-sm">Apply to sell online</a>
+                            break;
+                    }
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <p class="text-muted">
+        To sell at an event, open the event and choose <strong>Apply to sell at this event</strong>.
+        Only events whose organizers accept vendors show that option.
+        <a href="@Url.Action("Index", "Events", new { area = "" })?Filter.OpenToVendors=true">Browse events open to vendors</a>
+    </p>
+
+    <h2 class="h4">Applications</h2>
+    @if (Model.Applications.Count == 0)
+    {
+        <p>You haven't submitted any applications yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">For</th>
+                        <th scope="col">Submitted</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Reviewer's note</th>
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var application in Model.Applications)
+                    {
+                        <tr>
+                            <td>
+                                @if (application.Kind == VendorApplicationKind.OnlineSales)
+                                {
+                                    <span>Selling online</span>
+                                }
+                                else
+                                {
+                                    <a asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@application.EventId">@application.EventTitle</a>
+                                    <div class="small text-muted">@application.EventStartsAt?.LocalDateTime.ToString("MMM d, yyyy")</div>
+                                }
+                            </td>
+                            <td>@application.SubmittedAt.LocalDateTime.ToString("MMM d, yyyy")</td>
+                            <td><partial name="_ApplicationStatusBadge" model="application.Status" /></td>
+                            <td class="text-prewrap">@application.ReviewNote</td>
+                            <td class="text-end">
+                                @if (application.Status == ApplicationStatus.Submitted)
+                                {
+                                    <form method="post" asp-page-handler="Withdraw" class="d-inline">
+                                        <input type="hidden" name="applicationId" value="@application.Id" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Withdraw</button>
+                                    </form>
+                                }
+                                else if (application.Kind == VendorApplicationKind.Event &&
+                                         application.Status is ApplicationStatus.Rejected or ApplicationStatus.Withdrawn)
+                                {
+                                    <a asp-page="./Apply" asp-route-eventId="@application.EventId" class="btn btn-outline-primary btn-sm">Reapply</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}

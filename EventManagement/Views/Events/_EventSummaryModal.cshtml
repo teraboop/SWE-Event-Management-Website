@@ -24,6 +24,11 @@
                     @(Model.MinimumPrice == 0 ? "Free" : $"From {Model.MinimumPrice:C}")
                 </p>
 
+                @if (Model.AcceptsVendorApplications && !Model.HasEnded)
+                {
+                    <p class="vendor-open-badge">Open to vendor applications</p>
+                }
+
                 @if (Model.Interests.Count > 0)
                 {
                     <p>
