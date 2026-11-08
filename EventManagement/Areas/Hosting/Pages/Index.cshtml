@@ -1,0 +1,83 @@
+@page
+@model EventManagement.Areas.Hosting.Pages.IndexModel
+
+@{
+    ViewData["Title"] = "My event applications";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="mb-0">@ViewData["Title"]</h1>
+    <a asp-page="./Apply" class="btn btn-primary">Apply to list an event</a>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+
+<p class="text-muted">
+    Running an event? Apply to list it on the site. When an admin approves your application,
+    the event goes live and you become its organizer.
+</p>
+
+@if (Model.Applications.Count == 0)
+{
+    <p>You haven't applied to list any events yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Event</th>
+                    <th scope="col">Submitted</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Reviewer's note</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var application in Model.Applications)
+                {
+                    <tr>
+                        <td>
+                            @if (application.CreatedEventId is int eventId)
+                            {
+                                <a asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@eventId">@application.Title</a>
+                            }
+                            else
+                            {
+                                @application.Title
+                            }
+                            <div class="small text-muted">
+                                @application.StartsAt.LocalDateTime.ToString("MMM d, yyyy") · @application.City
+                            </div>
+                        </td>
+                        <td>@application.SubmittedAt.LocalDateTime.ToString("MMM d, yyyy")</td>
+                        <td><partial name="_ApplicationStatusBadge" model="application.Status" /></td>
+                        <td class="text-prewrap">@application.ReviewNote</td>
+                        <td class="text-end">
+                            @if (application.Status == ApplicationStatus.Submitted)
+                            {
+                                <form method="post" asp-page-handler="Withdraw" class="d-inline">
+                                    <input type="hidden" name="applicationId" value="@application.Id" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Withdraw</button>
+                                </form>
+                            }
+                            else if (application.CreatedEventId is int createdEventId)
+                            {
+                                <a asp-area="Organizer" asp-page="/Events/Edit" asp-route-id="@createdEventId"
+                                   class="btn btn-outline-primary btn-sm text-nowrap">Edit listing</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -18,6 +18,8 @@ builder.Services.AddScoped<EventDiscoveryService>();
 builder.Services.AddScoped<TicketPurchaseService>();
 builder.Services.AddScoped<VendorApplicationService>();
 builder.Services.AddScoped<PanelApplicationService>();
+builder.Services.AddScoped<EventImageService>();
+builder.Services.AddScoped<EventApplicationService>();
 builder.Services.TryAddSingleton(TimeProvider.System);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();

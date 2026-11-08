@@ -3,10 +3,20 @@
 <div class="modal fade" id="eventSummaryModal" tabindex="-1" aria-labelledby="eventSummaryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="eventSummaryModalLabel">@Model.Title</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+            @if (Model.BackgroundImageId is int backgroundImageId)
+            {
+                <div class="modal-header event-modal-hero" style="--event-hero-image: url('/images/event/@backgroundImageId')">
+                    <h1 class="modal-title fs-4" id="eventSummaryModalLabel">@Model.Title</h1>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            }
+            else
+            {
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="eventSummaryModalLabel">@Model.Title</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            }
 
             <div class="modal-body">
                 <p>

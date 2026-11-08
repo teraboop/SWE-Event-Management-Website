@@ -5,6 +5,8 @@ public class AdminIndexViewModel
     public List<AdminUserRowViewModel> Users { get; set; } = [];
 
     public int PendingOnlineVendorApplications { get; set; }
+
+    public int PendingEventApplications { get; set; }
 }
 
 public class AdminUserRowViewModel

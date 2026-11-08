@@ -12,7 +12,21 @@
     <div class="alert alert-info" role="status">@statusMessage</div>
 }
 
-<section class="card mt-4" aria-labelledby="vendor-review-heading">
+<section class="card mt-4" aria-labelledby="event-review-heading">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h2 id="event-review-heading" class="h5 mb-1">Event applications</h2>
+            <p class="text-muted mb-0">
+                @(Model.PendingEventApplications == 0
+                    ? "No applications to list an event are waiting for review."
+                    : $"{Model.PendingEventApplications} waiting for review.")
+            </p>
+        </div>
+        <a asp-controller="Admin" asp-action="EventApplications" class="btn btn-outline-primary">Review applications</a>
+    </div>
+</section>
+
+<section class="card mt-3" aria-labelledby="vendor-review-heading">
     <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
         <div>
             <h2 id="vendor-review-heading" class="h5 mb-1">Online vendor applications</h2>
@@ -62,7 +76,7 @@ else
                         <td class="text-end">
                             <form asp-controller="Admin" asp-action="SetOrganizerRole" method="post">
                                 <input type="hidden" name="userId" value="@account.Id" />
-                                <input type="hidden" name="makeOrganizer" value="@(!account.IsOrganizer)" />
+                                <input type="hidden" name="makeOrganizer" value="@(account.IsOrganizer ? "false" : "true")" />
                                 <button type="submit"
                                         class="btn btn-sm @(account.IsOrganizer ? "btn-outline-danger" : "btn-outline-primary")">
                                     @(account.IsOrganizer ? "Remove Organizer" : "Make Organizer")

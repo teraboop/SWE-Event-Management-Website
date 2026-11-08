@@ -9,7 +9,10 @@
 
 @if (Model.Events.Count == 0)
 {
-    <p>You don't organize any events yet.</p>
+    <p>
+        You don't organize any events yet.
+        <a asp-area="Hosting" asp-page="/Apply">Apply to list an event</a>
+    </p>
 }
 else
 {
@@ -70,6 +73,7 @@ else
                         </td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-2">
+                                <a asp-page="./Edit" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm text-nowrap">Edit listing</a>
                                 <a asp-page="./Ticketing" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm text-nowrap">Ticket settings</a>
                                 <a asp-page="./Vendors" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm text-nowrap">
                                     Vendors

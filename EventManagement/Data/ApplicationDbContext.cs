@@ -35,6 +35,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<PanelApplication> PanelApplications => Set<PanelApplication>();
 
+    public DbSet<EventImage> EventImages => Set<EventImage>();
+
+    public DbSet<EventApplication> EventApplications => Set<EventApplication>();
+
+    public DbSet<EventApplicationInterest> EventApplicationInterests => Set<EventApplicationInterest>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -425,6 +431,103 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasOne(application => application.Event)
                 .WithMany(@event => @event.PanelApplications)
                 .HasForeignKey(application => application.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<EventImage>(entity =>
+        {
+            entity.ToTable("EventImages");
+
+            entity.Property(image => image.ContentType).HasMaxLength(50).IsRequired();
+            entity.Property(image => image.Data).IsRequired();
+            entity.Property(image => image.UploadedByUserId).HasMaxLength(450);
+        });
+
+        // Images are shared by an application and the event made from it, so
+        // neither side may delete them out from under the other.
+        builder.Entity<Event>()
+            .HasOne(@event => @event.BackgroundImage)
+            .WithMany()
+            .HasForeignKey(@event => @event.BackgroundImageId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<EventApplication>(entity =>
+        {
+            entity.ToTable("EventApplications", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_EventApplications_EndsAfterStart",
+                    "[EndsAt] > [StartsAt]");
+
+                // Approved applications point at the event they created; no others do.
+                table.HasCheckConstraint(
+                    "CK_EventApplications_CreatedEventMatchesStatus",
+                    "([Status] = 1 AND [CreatedEventId] IS NOT NULL) OR ([Status] <> 1 AND [CreatedEventId] IS NULL)");
+            });
+
+            entity.Property(application => application.Status).HasConversion<int>();
+
+            // Listing fields use the same limits as Events.
+            entity.Property(application => application.Title).HasMaxLength(200).IsRequired();
+            entity.Property(application => application.Description).HasMaxLength(4000).IsRequired();
+            entity.Property(application => application.VenueName).HasMaxLength(200).IsRequired();
+            entity.Property(application => application.City).HasMaxLength(100).IsRequired();
+            entity.Property(application => application.PostalCode).HasMaxLength(20);
+            entity.Property(application => application.ExternalWebsiteUrl).HasMaxLength(2048);
+
+            entity.Property(application => application.ContactName).HasMaxLength(150).IsRequired();
+            entity.Property(application => application.ContactEmail).HasMaxLength(256).IsRequired();
+            entity.Property(application => application.ContactPhone).HasMaxLength(30);
+            entity.Property(application => application.OrganizationName).HasMaxLength(150);
+            entity.Property(application => application.Message).HasMaxLength(1000);
+            entity.Property(application => application.ReviewedByUserId).HasMaxLength(450);
+            entity.Property(application => application.ReviewedByName).HasMaxLength(256);
+            entity.Property(application => application.ReviewNote).HasMaxLength(1000);
+
+            // No two pending applications with the same title from one user,
+            // which also catches a form submitted twice.
+            entity.HasIndex(application => new { application.ApplicantUserId, application.Title })
+                .IsUnique()
+                .HasFilter("[Status] = 0")
+                .HasDatabaseName("IX_EventApplications_OnePendingPerTitle");
+
+            entity.HasIndex(application => new { application.Status, application.SubmittedAt });
+
+            entity.HasOne(application => application.Applicant)
+                .WithMany()
+                .HasForeignKey(application => application.ApplicantUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(application => application.EventCategory)
+                .WithMany()
+                .HasForeignKey(application => application.EventCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(application => application.BackgroundImage)
+                .WithMany()
+                .HasForeignKey(application => application.BackgroundImageId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(application => application.CreatedEvent)
+                .WithMany()
+                .HasForeignKey(application => application.CreatedEventId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<EventApplicationInterest>(entity =>
+        {
+            entity.ToTable("EventApplicationInterests");
+
+            entity.HasKey(interest => new { interest.EventApplicationId, interest.InterestCategoryId });
+
+            entity.HasOne(interest => interest.EventApplication)
+                .WithMany(application => application.Interests)
+                .HasForeignKey(interest => interest.EventApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(interest => interest.InterestCategory)
+                .WithMany()
+                .HasForeignKey(interest => interest.InterestCategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

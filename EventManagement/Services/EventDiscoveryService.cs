@@ -196,6 +196,7 @@ public class EventDiscoveryService
                         DurationMinutes = panel.DurationMinutes
                     })
                     .ToList(),
+                BackgroundImageId = @event.BackgroundImageId,
                 IsOwnEvent = userId != null && @event.OrganizerId == userId,
                 ExternalWebsiteUrl = @event.ExternalWebsiteUrl,
                 EventCategoryName = @event.EventCategory.Name,
