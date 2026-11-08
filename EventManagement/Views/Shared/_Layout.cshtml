@@ -23,6 +23,12 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Events" asp-action="Index">Events</a>
                         </li>
+                        @if (User.IsInRole("Organizer") || User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="Organizer" asp-page="/Events/Index">Manage events</a>
+                            </li>
+                        }
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">

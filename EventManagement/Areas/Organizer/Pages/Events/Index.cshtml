@@ -1,0 +1,79 @@
+@page
+@model EventManagement.Areas.Organizer.Pages.Events.IndexModel
+
+@{
+    ViewData["Title"] = Model.IsAdmin ? "All events" : "My events";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (Model.Events.Count == 0)
+{
+    <p>You don't organize any events yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Event</th>
+                    @if (Model.IsAdmin)
+                    {
+                        <th scope="col">Organizer</th>
+                    }
+                    <th scope="col">Starts</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Ticket sales</th>
+                    <th scope="col">Sold</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.Events)
+                {
+                    <tr>
+                        <td>
+                            @if (row.Status == EventStatus.Published)
+                            {
+                                <a asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@row.Id">@row.Title</a>
+                            }
+                            else
+                            {
+                                @row.Title
+                            }
+                        </td>
+                        @if (Model.IsAdmin)
+                        {
+                            <td>@row.OrganizerName</td>
+                        }
+                        <td>@row.StartsAt.LocalDateTime.ToString("MMM d, yyyy h:mm tt")</td>
+                        <td>@row.Status</td>
+                        <td>
+                            @(row.TicketSalesMode switch
+                            {
+                                TicketSalesMode.OnPlatform => "On this platform",
+                                TicketSalesMode.External => "External site",
+                                TicketSalesMode.NotRequired => "Not required",
+                                _ => "Not configured"
+                            })
+                        </td>
+                        <td>
+                            @if (row.TicketSalesMode == TicketSalesMode.OnPlatform)
+                            {
+                                @($"{row.TicketsSold} / {row.TicketCapacity}")
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a asp-page="./Ticketing" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm">Ticket settings</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

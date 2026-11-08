@@ -1,4 +1,5 @@
-﻿using EventManagement.Models.Events;
+﻿using EventManagement.Models.Commerce;
+using EventManagement.Models.Events;
 using EventManagement.Models.Profile;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<EventInterest> EventInterests => Set<EventInterest>();
 
     public DbSet<EventTicketType> EventTicketTypes => Set<EventTicketType>();
+
+    public DbSet<Order> Orders => Set<Order>();
+
+    public DbSet<Ticket> Tickets => Set<Ticket>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -183,7 +188,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 table.HasCheckConstraint(
                     "CK_EventTicketTypes_SalesWindow",
                     "[SalesEndAt] > [SalesStartAt]");
+
+                // The database's own guarantee against overselling: no write,
+                // from a purchase or an organizer lowering capacity, can leave
+                // more tickets sold than exist.
+                table.HasCheckConstraint(
+                    "CK_EventTicketTypes_QuantitySold_WithinCapacity",
+                    "[QuantitySold] >= 0 AND [QuantitySold] <= [QuantityAvailable]");
             });
+
+            entity.Property(ticketType => ticketType.QuantitySold)
+                .HasDefaultValue(0);
 
             entity.Property(ticketType => ticketType.Name)
                 .HasMaxLength(100)
@@ -222,6 +237,67 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany(@event => @event.TicketTypes)
                 .HasForeignKey(ticketType => ticketType.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Order>(entity =>
+        {
+            entity.ToTable("Orders", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_Orders_TotalAmount_NonNegative",
+                    "[TotalAmount] >= 0");
+            });
+
+            entity.Property(order => order.UserId)
+                .IsRequired();
+
+            entity.Property(order => order.Status)
+                .HasConversion<int>()
+                .IsRequired();
+
+            entity.Property(order => order.TotalAmount)
+                .HasPrecision(10, 2);
+
+            entity.HasIndex(order => new
+            {
+                order.UserId,
+                order.Status
+            });
+
+            // Deleting an account deletes its orders, matching SavedEvents, so
+            // the Identity "delete my data" page keeps working.
+            entity.HasOne(order => order.User)
+                .WithMany()
+                .HasForeignKey(order => order.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Ticket>(entity =>
+        {
+            entity.ToTable("Tickets", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_Tickets_UnitPrice_NonNegative",
+                    "[UnitPrice] >= 0");
+            });
+
+            entity.Property(ticket => ticket.UnitPrice)
+                .HasPrecision(10, 2);
+
+            entity.HasIndex(ticket => ticket.Code)
+                .IsUnique();
+
+            entity.HasOne(ticket => ticket.Order)
+                .WithMany(order => order.Tickets)
+                .HasForeignKey(ticket => ticket.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // A ticket type that has sold tickets cannot be deleted out from
+            // under its buyers; organizers disable it instead.
+            entity.HasOne(ticket => ticket.EventTicketType)
+                .WithMany(ticketType => ticketType.Tickets)
+                .HasForeignKey(ticket => ticket.EventTicketTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

@@ -100,6 +100,77 @@ namespace EventManagement.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Commerce.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Status");
+
+                    b.ToTable("Orders", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Orders_TotalAmount_NonNegative", "[TotalAmount] >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Commerce.Ticket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("Code")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("EventTicketTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("EventTicketTypeId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("Tickets", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Tickets_UnitPrice_NonNegative", "[UnitPrice] >= 0");
+                        });
+                });
+
             modelBuilder.Entity("EventManagement.Models.Events.Event", b =>
                 {
                     b.Property<int>("Id")
@@ -241,6 +312,11 @@ namespace EventManagement.Data.Migrations
                     b.Property<int>("QuantityAvailable")
                         .HasColumnType("int");
 
+                    b.Property<int>("QuantitySold")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTimeOffset>("SalesEndAt")
                         .HasColumnType("datetimeoffset");
 
@@ -259,6 +335,8 @@ namespace EventManagement.Data.Migrations
                             t.HasCheckConstraint("CK_EventTicketTypes_Price_NonNegative", "[Price] >= 0");
 
                             t.HasCheckConstraint("CK_EventTicketTypes_QuantityAvailable_NonNegative", "[QuantityAvailable] >= 0");
+
+                            t.HasCheckConstraint("CK_EventTicketTypes_QuantitySold_WithinCapacity", "[QuantitySold] >= 0 AND [QuantitySold] <= [QuantityAvailable]");
 
                             t.HasCheckConstraint("CK_EventTicketTypes_SalesWindow", "[SalesEndAt] > [SalesStartAt]");
                         });
@@ -455,6 +533,36 @@ namespace EventManagement.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Commerce.Order", b =>
+                {
+                    b.HasOne("EventManagement.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Commerce.Ticket", b =>
+                {
+                    b.HasOne("EventManagement.Models.Events.EventTicketType", "EventTicketType")
+                        .WithMany("Tickets")
+                        .HasForeignKey("EventTicketTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EventManagement.Models.Commerce.Order", "Order")
+                        .WithMany("Tickets")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EventTicketType");
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("EventManagement.Models.Events.Event", b =>
                 {
                     b.HasOne("EventManagement.Models.Events.EventCategory", "EventCategory")
@@ -600,6 +708,11 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("SavedEvents");
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Commerce.Order", b =>
+                {
+                    b.Navigation("Tickets");
+                });
+
             modelBuilder.Entity("EventManagement.Models.Events.Event", b =>
                 {
                     b.Navigation("Interests");
@@ -612,6 +725,11 @@ namespace EventManagement.Data.Migrations
             modelBuilder.Entity("EventManagement.Models.Events.EventCategory", b =>
                 {
                     b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Events.EventTicketType", b =>
+                {
+                    b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("EventManagement.Models.Profile.InterestCategory", b =>

@@ -18,11 +18,26 @@ public class EventTicketType
     public Event Event { get; set; } = null!;
     public required string Name { get; set; }
     public decimal Price { get; set; }
+
+    /// <summary>
+    /// Total capacity for this ticket type. This does not go down as tickets
+    /// sell; remaining tickets are <c>QuantityAvailable - QuantitySold</c>.
+    /// </summary>
     public int QuantityAvailable { get; set; }
+
+    /// <summary>
+    /// Running count of tickets held by pending or completed orders. Only the
+    /// purchase service changes it, with one atomic UPDATE, and a database
+    /// check constraint keeps it within 0..QuantityAvailable, so tickets can
+    /// never oversell, even with simultaneous buyers.
+    /// </summary>
+    public int QuantitySold { get; set; }
+
     public DateTimeOffset SalesStartAt { get; set; }
     public DateTimeOffset SalesEndAt { get; set; }
     public bool IsEnabled { get; set; } = true;
 
+    public ICollection<Commerce.Ticket> Tickets { get; set; } = [];
 }
 
 public class Event

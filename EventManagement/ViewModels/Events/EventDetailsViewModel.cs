@@ -1,4 +1,6 @@
-﻿namespace EventManagement.ViewModels.Events;
+﻿using EventManagement.Models.Events;
+
+namespace EventManagement.ViewModels.Events;
 
 public class EventDetailsViewModel
 {
@@ -20,6 +22,20 @@ public class EventDetailsViewModel
 
     public decimal MinimumPrice { get; set; }
 
+    public TicketSalesMode TicketSalesMode { get; set; }
+
+    public string? ExternalTicketingUrl { get; set; }
+
+    public IReadOnlyList<EventTicketTypeDetailsViewModel> AvailableTicketTypes { get; set; } = [];
+
+    public bool HasStarted { get; set; }
+
+    /// <summary>True when the signed-in user organizes this event.</summary>
+    public bool IsOwnEvent { get; set; }
+
+    /// <summary>Tickets the signed-in user already holds for this event.</summary>
+    public int TicketsHeld { get; set; }
+
     public string? ExternalWebsiteUrl { get; set; }
 
     public bool IsSaved { get; set; }
@@ -31,4 +47,21 @@ public class EventDetailsViewModel
     public string OrganizerName { get; set; } = string.Empty;
 
     public IReadOnlyList<string> Interests { get; set; } = [];
+}
+
+public class EventTicketTypeDetailsViewModel
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public decimal Price { get; set; }
+
+    public int Remaining { get; set; }
+
+    public bool IsSoldOut => Remaining <= 0;
+
+    public DateTimeOffset SalesStartAt { get; set; }
+
+    public DateTimeOffset SalesEndAt { get; set; }
 }

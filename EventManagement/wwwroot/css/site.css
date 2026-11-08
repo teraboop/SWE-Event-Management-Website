@@ -198,3 +198,8 @@ body {
   background-color: var(--ink);
   border-radius: var(--radius);
 }
+
+/* Quantity box beside the buy button on the event Details page. */
+.ticket-quantity {
+  width: 5rem;
+}

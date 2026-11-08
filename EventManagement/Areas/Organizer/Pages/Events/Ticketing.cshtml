@@ -1,11 +1,29 @@
 ﻿@page "{id:int}"
-@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
-@using EventManagement.Models.Events
 @model EventManagement.Areas.Organizer.Pages.Events.TicketingModel
 
 @{
     ViewData["Title"] = "Ticket settings";
+
+    // Each form gets its own summary of form-level errors (keyed by the form's
+    // model prefix) instead of a shared ModelOnly summary that every form shows.
+    void RenderFormErrors(string formKey)
+    {
+        var errors = Model.GetFormErrors(formKey);
+        if (errors.Count > 0)
+        {
+            <div class="alert alert-danger" role="alert">
+                <ul class="mb-0">
+                    @foreach (var error in errors)
+                    {
+                        <li>@error</li>
+                    }
+                </ul>
+            </div>
+        }
+    }
 }
+
+<a asp-page="./Index" class="btn btn-outline-secondary mb-3">Back to events</a>
 
 <h1>Ticket settings for @Model.EventTitle</h1>
 
@@ -14,9 +32,8 @@
     <div class="alert alert-success" role="status">@Model.StatusMessage</div>
 }
 
-<form method="post">
-    @Html.AntiForgeryToken()
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<form method="post" asp-page-handler="SaveSettings" novalidate>
+    @{ RenderFormErrors(nameof(Model.Input)); }
 
     <div class="mb-3">
         <label asp-for="Input.TicketSalesMode" class="form-label">Ticket sales option</label>
@@ -31,18 +48,121 @@
 
     <div class="mb-3">
         <label asp-for="Input.ExternalTicketingUrl" class="form-label">External ticket link</label>
-        <input asp-for="Input.ExternalTicketingUrl"
+        <input name="Input.ExternalTicketingUrl"
+               id="Input_ExternalTicketingUrl"
                type="url"
                class="form-control"
                maxlength="2048"
-               placeholder="https://example.com/tickets" />
+               placeholder="https://example.com/tickets"
+               value="@Model.Input.ExternalTicketingUrl" />
         <span asp-validation-for="Input.ExternalTicketingUrl" class="text-danger"></span>
         <div class="form-text">Required only when using an external ticketing site.</div>
     </div>
 
-    <p class="text-muted">
-        On-platform ticket sales still need ticket types and checkout to be implemented.
-    </p>
-
     <button type="submit" class="btn btn-primary">Save ticket settings</button>
 </form>
+
+<section class="mb-4" aria-labelledby="ticket-types-heading">
+    <h2 id="ticket-types-heading" class="h4">On-platform ticket types</h2>
+    <p class="text-muted">Uncheck Enabled to stop offering a type without deleting its record.</p>
+
+    @if (Model.TicketEdit.TicketTypes.Count > 0)
+    {
+        <form method="post" asp-page-handler="UpdateTicketTypes" novalidate>
+            @{ RenderFormErrors(nameof(Model.TicketEdit)); }
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Capacity</th>
+                            <th scope="col">Sold</th>
+                            <th scope="col">Sales start</th>
+                            <th scope="col">Sales end</th>
+                            <th scope="col">Enabled</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var index = 0; index < Model.TicketEdit.TicketTypes.Count; index++)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="hidden" asp-for="TicketEdit.TicketTypes[index].Id" />
+                                    <input asp-for="TicketEdit.TicketTypes[index].Name" class="form-control" maxlength="100" />
+                                    <span asp-validation-for="TicketEdit.TicketTypes[index].Name" class="text-danger"></span>
+                                </td>
+                                <td>
+                                    <input asp-for="TicketEdit.TicketTypes[index].Price" class="form-control" type="number" min="0" max="10000000" step="0.01" />
+                                    <span asp-validation-for="TicketEdit.TicketTypes[index].Price" class="text-danger"></span>
+                                </td>
+                                <td>
+                                    <input asp-for="TicketEdit.TicketTypes[index].QuantityAvailable" class="form-control" type="number" min="@Model.TicketEdit.TicketTypes[index].QuantitySold" step="1" />
+                                    <span asp-validation-for="TicketEdit.TicketTypes[index].QuantityAvailable" class="text-danger"></span>
+                                </td>
+                                <td>@Model.TicketEdit.TicketTypes[index].QuantitySold</td>
+                                <td>
+                                    <input asp-for="TicketEdit.TicketTypes[index].SalesStartAt" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                                    <span asp-validation-for="TicketEdit.TicketTypes[index].SalesStartAt" class="text-danger"></span>
+                                </td>
+                                <td>
+                                    <input asp-for="TicketEdit.TicketTypes[index].SalesEndAt" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                                    <span asp-validation-for="TicketEdit.TicketTypes[index].SalesEndAt" class="text-danger"></span>
+                                </td>
+                                <td>
+                                    <input asp-for="TicketEdit.TicketTypes[index].IsEnabled" class="form-check-input" />
+                                    <label asp-for="TicketEdit.TicketTypes[index].IsEnabled" class="form-check-label">Enabled</label>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <button type="submit" class="btn btn-primary">Save ticket type changes</button>
+        </form>
+    }
+    else
+    {
+        <p>No ticket types have been added to this event yet.</p>
+    }
+
+    <form method="post" asp-page-handler="AddTicketType" class="mt-4" novalidate>
+        @{ RenderFormErrors(nameof(Model.NewTicketType)); }
+        <fieldset class="border rounded p-3">
+            <legend class="float-none w-auto px-2 h6">Add a ticket type</legend>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="NewTicketType.Name" class="form-label">Name</label>
+                    <input name="NewTicketType.Name"
+                           id="NewTicketType_Name"
+                           class="form-control"
+                           maxlength="100"
+                           placeholder="General Admission"
+                           value="@Model.NewTicketType.Name" />
+                    <span asp-validation-for="NewTicketType.Name" class="text-danger"></span>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="NewTicketType.Price" class="form-label">Price</label>
+                    <input asp-for="NewTicketType.Price" class="form-control" type="number" min="0" max="10000000" step="0.01" />
+                    <span asp-validation-for="NewTicketType.Price" class="text-danger"></span>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="NewTicketType.QuantityAvailable" class="form-label">Capacity</label>
+                    <input asp-for="NewTicketType.QuantityAvailable" class="form-control" type="number" min="0" step="1" />
+                    <span asp-validation-for="NewTicketType.QuantityAvailable" class="text-danger"></span>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="NewTicketType.SalesStartAt" class="form-label">Sales start</label>
+                    <input asp-for="NewTicketType.SalesStartAt" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                    <span asp-validation-for="NewTicketType.SalesStartAt" class="text-danger"></span>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="NewTicketType.SalesEndAt" class="form-label">Sales end</label>
+                    <input asp-for="NewTicketType.SalesEndAt" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                    <span asp-validation-for="NewTicketType.SalesEndAt" class="text-danger"></span>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Add ticket type</button>
+        </fieldset>
+    </form>
+</section>

@@ -130,6 +130,8 @@ public class EventDiscoveryService
     }
     public async Task<EventDetailsViewModel?> GetEventDetailsAsync(int id, string? userId = null)
     {
+        var now = DateTimeOffset.UtcNow;
+
         return await _context.Events
             .AsNoTracking()
             .Where(@event =>
@@ -146,6 +148,27 @@ public class EventDiscoveryService
                 City = @event.City,
                 PostalCode = @event.PostalCode,
                 MinimumPrice = @event.MinimumPrice,
+                TicketSalesMode = @event.TicketSalesMode,
+                ExternalTicketingUrl = @event.ExternalTicketingUrl,
+                AvailableTicketTypes = @event.TicketTypes
+                    .Where(ticketType =>
+                        ticketType.IsEnabled &&
+                        ticketType.SalesStartAt <= now &&
+                        ticketType.SalesEndAt > now)
+                    .OrderBy(ticketType => ticketType.Price)
+                    .ThenBy(ticketType => ticketType.Name)
+                    .Select(ticketType => new EventTicketTypeDetailsViewModel
+                    {
+                        Id = ticketType.Id,
+                        Name = ticketType.Name,
+                        Price = ticketType.Price,
+                        Remaining = ticketType.QuantityAvailable - ticketType.QuantitySold,
+                        SalesStartAt = ticketType.SalesStartAt,
+                        SalesEndAt = ticketType.SalesEndAt
+                    })
+                    .ToList(),
+                HasStarted = @event.StartsAt <= now,
+                IsOwnEvent = userId != null && @event.OrganizerId == userId,
                 ExternalWebsiteUrl = @event.ExternalWebsiteUrl,
                 EventCategoryName = @event.EventCategory.Name,
                 OrganizerName = @event.Organizer.UserName ?? "Event organizer",
