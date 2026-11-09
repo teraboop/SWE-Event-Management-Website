@@ -16,13 +16,16 @@ public class TicketsController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly TicketPurchaseService _ticketPurchaseService;
     private readonly TimeProvider _timeProvider;
+    private readonly EventReviewService _eventReviewService;
 
     public TicketsController(
         ApplicationDbContext dbContext,
         UserManager<ApplicationUser> userManager,
         TicketPurchaseService ticketPurchaseService,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        EventReviewService eventReviewService)
     {
+        _eventReviewService = eventReviewService;
         _dbContext = dbContext;
         _userManager = userManager;
         _ticketPurchaseService = ticketPurchaseService;
@@ -80,6 +83,7 @@ public class TicketsController : Controller
                     VenueName = first.VenueName,
                     City = first.City,
                     Status = first.Status,
+                    CanReview = first.Status == Models.Events.EventStatus.Published && first.EndsAt < now,
                     Tickets = group
                         .Select(row => row.Ticket)
                         .OrderBy(ticket => ticket.OrderId)
@@ -88,6 +92,15 @@ public class TicketsController : Controller
                 };
             })
             .ToList();
+
+        var myRatings = await _eventReviewService.GetUserRatingsAsync(
+            userId,
+            events.Where(@event => @event.CanReview).Select(@event => @event.EventId).ToList());
+
+        foreach (var @event in events)
+        {
+            @event.MyRating = myRatings.TryGetValue(@event.EventId, out var rating) ? rating : null;
+        }
 
         // Split on when the event ends, so an event in progress counts as upcoming.
         var model = new MyTicketsViewModel

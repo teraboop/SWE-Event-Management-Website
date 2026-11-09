@@ -48,6 +48,14 @@ else
 
 <p>
     <strong>Organizer:</strong> @Model.OrganizerName
+    @if (Model.OrganizerRating.HasReviews)
+    {
+        <span class="rating-inline ms-2">
+            <partial name="_StarRating" model="Model.OrganizerRating.Average" />
+            @Model.OrganizerRating.AverageText
+            <span class="text-muted small">(@Model.OrganizerRating.CountText across their events)</span>
+        </span>
+    }
 </p>
 
 <p>
@@ -335,4 +343,10 @@ else
        rel="noopener noreferrer">
         Visit Event Website
     </a>
+}
+
+@if (Model.Reviews is not null)
+{
+    <hr />
+    <partial name="_EventReviews" model="Model.Reviews" />
 }

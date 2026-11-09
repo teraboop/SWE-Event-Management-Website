@@ -653,6 +653,50 @@ namespace EventManagement.Data.Migrations
                     b.ToTable("UserInterests", (string)null);
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Reviews.EventReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthorUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorUserId");
+
+                    b.HasIndex("EventId", "AuthorUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_EventReviews_OnePerAuthor");
+
+                    b.HasIndex("EventId", "CreatedAt");
+
+                    b.ToTable("EventReviews", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_EventReviews_Rating", "[Rating] BETWEEN 1 AND 5");
+                        });
+                });
+
             modelBuilder.Entity("EventManagement.Models.Vendors.VendorApplication", b =>
                 {
                     b.Property<int>("Id")
@@ -1118,6 +1162,25 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Reviews.EventReview", b =>
+                {
+                    b.HasOne("EventManagement.Data.ApplicationUser", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EventManagement.Models.Events.Event", "Event")
+                        .WithMany("Reviews")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Event");
+                });
+
             modelBuilder.Entity("EventManagement.Models.Vendors.VendorApplication", b =>
                 {
                     b.HasOne("EventManagement.Models.Events.Event", "Event")
@@ -1215,6 +1278,8 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("Interests");
 
                     b.Navigation("PanelApplications");
+
+                    b.Navigation("Reviews");
 
                     b.Navigation("SavedByUsers");
 

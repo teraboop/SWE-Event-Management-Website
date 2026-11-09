@@ -23,6 +23,23 @@
                         · @ticketEvent.VenueName, @ticketEvent.City
                     </p>
 
+                    @if (ticketEvent.CanReview)
+                    {
+                        <div class="rating-inline mb-3">
+                            @if (ticketEvent.MyRating is int myRating)
+                            {
+                                <span>You rated it</span>
+                                <partial name="_StarRating" model="(double)myRating" />
+                                <a asp-controller="Events" asp-action="Details" asp-route-id="@ticketEvent.EventId" asp-fragment="reviews">Edit your review</a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Events" asp-action="Details" asp-route-id="@ticketEvent.EventId" asp-fragment="reviews"
+                                   class="btn btn-outline-primary btn-sm">How was it? Leave a review</a>
+                            }
+                        </div>
+                    }
+
                     <div class="table-responsive">
                         <table class="table table-sm mb-0">
                             <thead>

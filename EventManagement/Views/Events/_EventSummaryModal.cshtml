@@ -34,6 +34,25 @@
                     @(Model.MinimumPrice == 0 ? "Free" : $"From {Model.MinimumPrice:C}")
                 </p>
 
+                @if (Model.EventRating.HasReviews)
+                {
+                    <p class="rating-inline">
+                        <strong>Rating:</strong>
+                        <partial name="_StarRating" model="Model.EventRating.Average" />
+                        @Model.EventRating.AverageText
+                        <span class="text-muted small">(@Model.EventRating.CountText)</span>
+                    </p>
+                }
+                else if (Model.OrganizerRating.HasReviews)
+                {
+                    <p class="rating-inline">
+                        <strong>Organizer rating:</strong>
+                        <partial name="_StarRating" model="Model.OrganizerRating.Average" />
+                        @Model.OrganizerRating.AverageText
+                        <span class="text-muted small">(@Model.OrganizerRating.CountText of past events)</span>
+                    </p>
+                }
+
                 <partial name="_OpenApplicationBadges"
                          model="(Model.AcceptsVendorApplications && !Model.HasEnded, Model.AcceptsPanelApplications && !Model.HasEnded)" />
 
