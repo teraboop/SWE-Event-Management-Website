@@ -1,0 +1,49 @@
+@model EventManagement.ViewModels.Cart.CartViewModel
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<a asp-action="Index" class="btn btn-outline-secondary mb-3">Back to cart</a>
+
+<h1>Checkout</h1>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <section aria-labelledby="checkout-items-heading">
+            <h2 id="checkout-items-heading" class="h5">Review your order</h2>
+            <ul class="cart-lines list-unstyled">
+                @foreach (var line in Model.Lines)
+                {
+                    <partial name="_CartLine" model="line" />
+                }
+            </ul>
+        </section>
+    </div>
+
+    <div class="col-lg-4">
+        <aside class="cart-summary" aria-labelledby="checkout-summary-heading">
+            <h2 id="checkout-summary-heading" class="h5">Payment</h2>
+
+            <div class="checkout-demo-note">
+                <strong>Demo checkout.</strong>
+                No payment is taken and no card details are needed.
+                Placing the order confirms it straight away.
+            </div>
+
+            <dl class="cart-summary-rows">
+                <dt>Items</dt>
+                <dd>@Model.ItemCount</dd>
+                <dt class="cart-summary-total">Total</dt>
+                <dd class="cart-summary-total">@Model.Total.ToString("C")</dd>
+            </dl>
+
+            <form asp-action="PlaceOrder" method="post">
+                @* The total you saw. If a price changes before the order goes through, it's refused rather than charging a different amount. *@
+                <input type="hidden" name="expectedTotal" value="@Model.Total.ToString("0.00", CultureInfo.InvariantCulture)" />
+                <button type="submit" class="btn btn-primary w-100">Place order</button>
+            </form>
+        </aside>
+    </div>
+</div>

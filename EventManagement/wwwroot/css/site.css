@@ -1535,3 +1535,124 @@ body {
   border-radius: 0.5rem;
   background-color: var(--surface-alt);
 }
+
+/* Cart, checkout and orders. */
+.cart-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cart-lines {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.cart-line {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto auto;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+}
+
+.cart-line + .cart-line {
+  border-top: 1px solid var(--border);
+}
+
+.cart-line-problem {
+  background-color: #fef2f2;
+}
+
+.cart-line-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background-color: var(--surface-alt);
+}
+
+.cart-line-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cart-line-image .product-card-placeholder {
+  font-size: 1.25rem;
+}
+
+.cart-line-icon {
+  font-size: 1.5rem;
+}
+
+.cart-line-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.cart-line-total {
+  min-width: 5rem;
+  text-align: right;
+  font-weight: 600;
+}
+
+@media (max-width: 575.98px) {
+  .cart-line {
+    grid-template-columns: 3.5rem 1fr;
+  }
+
+  .cart-line-actions,
+  .cart-line-total {
+    grid-column: 2;
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+.cart-summary {
+  position: sticky;
+  top: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-alt);
+}
+
+.cart-summary-rows {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 1rem;
+  margin: 1rem 0;
+}
+
+.cart-summary-rows dd {
+  margin: 0;
+  text-align: right;
+}
+
+.cart-summary-total {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.checkout-demo-note {
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  border-radius: 0.5rem;
+  color: #3730a3;
+  background-color: var(--brand-soft);
+  font-size: 0.9rem;
+}
+
+.order-total {
+  font-size: 1.25rem;
+  text-align: right;
+}

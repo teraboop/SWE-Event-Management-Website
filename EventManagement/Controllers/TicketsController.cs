@@ -124,30 +124,4 @@ public class TicketsController : Controller
 
         return View(model);
     }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Purchase(int eventId, int ticketTypeId, int quantity)
-    {
-        var userId = _userManager.GetUserId(User);
-        if (userId is null)
-        {
-            return Challenge();
-        }
-
-        var result = await _ticketPurchaseService.PurchaseAsync(
-            userId, eventId, ticketTypeId, quantity, HttpContext.RequestAborted);
-
-        if (!result.Succeeded)
-        {
-            TempData["TicketError"] = result.Message;
-            return RedirectToAction("Details", "Events", new { id = eventId });
-        }
-
-        TempData["StatusMessage"] = quantity == 1
-            ? $"Order #{result.OrderId} confirmed. Your ticket is below."
-            : $"Order #{result.OrderId} confirmed. Your {quantity} tickets are below.";
-
-        return RedirectToAction(nameof(Index));
-    }
 }

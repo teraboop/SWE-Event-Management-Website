@@ -178,7 +178,7 @@ else
                                         }
                                         else if (canBuy)
                                         {
-                                            <form asp-controller="Tickets" asp-action="Purchase" method="post"
+                                            <form asp-controller="Cart" asp-action="AddTickets" method="post"
                                                   class="d-inline-flex gap-2 justify-content-end">
                                                 <input type="hidden" name="eventId" value="@Model.Id" />
                                                 <input type="hidden" name="ticketTypeId" value="@ticketType.Id" />
@@ -187,7 +187,7 @@ else
                                                        class="form-control form-control-sm ticket-quantity"
                                                        aria-label="Number of @ticketType.Name tickets" />
                                                 <button type="submit" class="btn btn-primary btn-sm text-nowrap">
-                                                    @(ticketType.Price == 0 ? "Get tickets" : "Buy tickets")
+                                                    Add to cart
                                                 </button>
                                             </form>
                                         }
@@ -212,8 +212,8 @@ else
                 else
                 {
                     <p class="text-muted small">
-                        Up to @TicketPurchaseService.MaxTicketsPerOrder tickets per order.
-                        Online payment isn't available yet, so orders are confirmed immediately.
+                        Up to @TicketPurchaseService.MaxTicketsPerOrder of each ticket type per order.
+                        Checkout is a demo: no payment is taken, and orders are confirmed immediately.
                     </p>
                 }
             }
