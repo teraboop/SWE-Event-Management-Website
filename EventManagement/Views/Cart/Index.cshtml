@@ -1,0 +1,89 @@
+@model EventManagement.ViewModels.Cart.CartViewModel
+
+@{
+    ViewData["Title"] = "Your cart";
+    ViewData["Editable"] = true;
+}
+
+<h1>Your cart</h1>
+
+@if (TempData["CartMessage"] is string cartMessage)
+{
+    <div class="alert alert-success" role="status">@cartMessage</div>
+}
+@if (TempData["CartError"] is string cartError)
+{
+    <div class="alert alert-danger" role="alert">@cartError</div>
+}
+
+@if (Model.IsEmpty)
+{
+    <div class="card">
+        <div class="card-body">
+            <p class="card-text">Your cart is empty.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-controller="Events" asp-action="Index" class="btn btn-primary">Find events</a>
+                <a asp-controller="Shop" asp-action="Index" class="btn btn-outline-primary">Browse the shop</a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-lg-8">
+            @if (Model.TicketLines.Any())
+            {
+                <section aria-labelledby="cart-tickets-heading" class="mb-4">
+                    <h2 id="cart-tickets-heading" class="h5">Tickets</h2>
+                    <ul class="cart-lines list-unstyled">
+                        @foreach (var line in Model.TicketLines)
+                        {
+                            <partial name="_CartLine" model="line" />
+                        }
+                    </ul>
+                </section>
+            }
+
+            @if (Model.ProductLines.Any())
+            {
+                <section aria-labelledby="cart-products-heading" class="mb-4">
+                    <h2 id="cart-products-heading" class="h5">Merchandise</h2>
+                    <ul class="cart-lines list-unstyled">
+                        @foreach (var line in Model.ProductLines)
+                        {
+                            <partial name="_CartLine" model="line" />
+                        }
+                    </ul>
+                </section>
+            }
+
+            <p class="small text-muted">
+                Items aren't held while they're in your cart. Stock is only taken when you place your order.
+                Set a quantity to 0 to remove it.
+            </p>
+        </div>
+
+        <div class="col-lg-4">
+            <aside class="cart-summary" aria-labelledby="cart-summary-heading">
+                <h2 id="cart-summary-heading" class="h5">Summary</h2>
+                <dl class="cart-summary-rows">
+                    <dt>Items</dt>
+                    <dd>@Model.ItemCount</dd>
+                    <dt class="cart-summary-total">Total</dt>
+                    <dd class="cart-summary-total">@Model.Total.ToString("C")</dd>
+                </dl>
+
+                @if (Model.CanCheckout)
+                {
+                    <a asp-action="Checkout" class="btn btn-primary w-100">Check out</a>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary w-100" disabled>Check out</button>
+                    <p class="small text-danger mt-2 mb-0">Fix the items marked in red to check out.</p>
+                }
+            </aside>
+        </div>
+    </div>
+}

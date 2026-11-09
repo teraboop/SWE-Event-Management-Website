@@ -48,6 +48,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<EventAnnouncement> EventAnnouncements => Set<EventAnnouncement>();
 
+    public DbSet<CartItem> CartItems => Set<CartItem>();
+
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -620,6 +624,83 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany(@event => @event.Announcements)
                 .HasForeignKey(announcement => announcement.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<CartItem>(entity =>
+        {
+            entity.ToTable("CartItems", table =>
+            {
+                // Each line is either tickets or a product, never both or neither.
+                table.HasCheckConstraint(
+                    "CK_CartItems_TicketOrProduct",
+                    "([EventTicketTypeId] IS NOT NULL AND [VendorProductId] IS NULL) OR ([EventTicketTypeId] IS NULL AND [VendorProductId] IS NOT NULL)");
+
+                table.HasCheckConstraint(
+                    "CK_CartItems_Quantity",
+                    "[Quantity] BETWEEN 1 AND 10");
+            });
+
+            // One line per ticket type and per product in a cart; adding again
+            // raises the quantity. Filtered because SQL Server treats NULLs
+            // as equal in a unique index.
+            entity.HasIndex(item => new { item.UserId, item.EventTicketTypeId })
+                .IsUnique()
+                .HasFilter("[EventTicketTypeId] IS NOT NULL")
+                .HasDatabaseName("IX_CartItems_OneLinePerTicketType");
+
+            entity.HasIndex(item => new { item.UserId, item.VendorProductId })
+                .IsUnique()
+                .HasFilter("[VendorProductId] IS NOT NULL")
+                .HasDatabaseName("IX_CartItems_OneLinePerProduct");
+
+            entity.HasOne(item => item.User)
+                .WithMany()
+                .HasForeignKey(item => item.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Deleting a ticket type takes it out of carts too.
+            entity.HasOne(item => item.EventTicketType)
+                .WithMany()
+                .HasForeignKey(item => item.EventTicketTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Restrict, not Cascade: products already cascade from the vendor's
+            // account, and SQL Server refuses two cascade paths from users to
+            // this table. Products are archived rather than deleted anyway.
+            entity.HasOne(item => item.VendorProduct)
+                .WithMany()
+                .HasForeignKey(item => item.VendorProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<OrderItem>(entity =>
+        {
+            entity.ToTable("OrderItems", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_OrderItems_UnitPrice_NonNegative",
+                    "[UnitPrice] >= 0");
+
+                table.HasCheckConstraint(
+                    "CK_OrderItems_Quantity_Positive",
+                    "[Quantity] > 0");
+            });
+
+            entity.Property(item => item.ProductName).HasMaxLength(150).IsRequired();
+            entity.Property(item => item.VendorName).HasMaxLength(150).IsRequired();
+            entity.Property(item => item.UnitPrice).HasPrecision(10, 2);
+
+            entity.HasOne(item => item.Order)
+                .WithMany(order => order.Items)
+                .HasForeignKey(item => item.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // A product that has sold can't be deleted out from under its
+            // order history, matching Tickets and ticket types.
+            entity.HasOne(item => item.VendorProduct)
+                .WithMany()
+                .HasForeignKey(item => item.VendorProductId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

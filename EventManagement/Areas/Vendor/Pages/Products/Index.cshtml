@@ -59,6 +59,7 @@ else
                         <th scope="col">Product</th>
                         <th scope="col">Price</th>
                         <th scope="col">In stock</th>
+                        <th scope="col">Sold</th>
                         <th scope="col">Shop</th>
                         <th scope="col"><span class="visually-hidden">Actions</span></th>
                     </tr>
@@ -98,6 +99,7 @@ else
                                     @product.QuantityInStock
                                 }
                             </td>
+                            <td>@Model.UnitsSold.GetValueOrDefault(product.Id)</td>
                             <td>
                                 @if (product.IsListed)
                                 {

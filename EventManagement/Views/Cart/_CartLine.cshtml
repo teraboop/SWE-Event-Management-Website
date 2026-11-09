@@ -1,0 +1,79 @@
+@model EventManagement.ViewModels.Cart.CartLineViewModel
+
+@*
+    One cart line. With view-data["Editable"] = true (the cart page) it gets
+    quantity and remove controls; the checkout page shows it read-only.
+*@
+@{
+    var editable = ViewData["Editable"] is true;
+}
+<li class="cart-line @(Model.Problem is not null ? "cart-line-problem" : null)">
+    <div class="cart-line-image" aria-hidden="true">
+        @if (Model.IsTicket)
+        {
+            <span class="cart-line-icon">🎟</span>
+        }
+        else if (Model.ImageId is int imageId)
+        {
+            <img src="/images/product/@imageId" alt="" />
+        }
+        else
+        {
+            <span class="product-card-placeholder">@Model.Name[..1].ToUpperInvariant()</span>
+        }
+    </div>
+
+    <div class="cart-line-info">
+        <div class="fw-semibold">
+            @if (Model.IsTicket)
+            {
+                <a asp-controller="Events" asp-action="Details" asp-route-id="@Model.LinkId">@Model.Context</a>
+            }
+            else
+            {
+                <a asp-controller="Shop" asp-action="Product" asp-route-id="@Model.LinkId">@Model.Name</a>
+            }
+        </div>
+        <div class="small text-muted">
+            @if (Model.IsTicket)
+            {
+                @Model.Name
+                @if (Model.EventStartsAt is DateTimeOffset startsAt)
+                {
+                    <span>· @startsAt.LocalDateTime.ToString("ddd, MMM d, yyyy h:mm tt")</span>
+                }
+            }
+            else
+            {
+                <span>Sold by @Model.Context</span>
+            }
+        </div>
+        <div class="small">@(Model.UnitPrice == 0 ? "Free" : Model.UnitPrice.ToString("C")) each</div>
+        @if (Model.Problem is not null)
+        {
+            <div class="small text-danger fw-semibold mt-1" role="alert">@Model.Problem</div>
+        }
+    </div>
+
+    <div class="cart-line-actions">
+        @if (editable)
+        {
+            <form asp-action="Update" method="post" class="d-flex gap-2 align-items-center">
+                <input type="hidden" name="lineId" value="@Model.Id" />
+                <input type="number" name="quantity" value="@Model.Quantity" min="0" max="@Math.Max(Model.MaxQuantity, Model.Quantity)" step="1"
+                       class="form-control form-control-sm ticket-quantity" aria-label="Quantity of @Model.Name" />
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Update</button>
+            </form>
+            <form asp-action="Remove" method="post">
+                <input type="hidden" name="lineId" value="@Model.Id" />
+                <button type="submit" class="btn btn-link btn-sm text-danger p-0">Remove</button>
+            </form>
+        }
+        else
+        {
+            <span class="small text-muted">Qty @Model.Quantity</span>
+        }
+    </div>
+
+    <div class="cart-line-total">@(Model.LineTotal == 0 ? "Free" : Model.LineTotal.ToString("C"))</div>
+</li>

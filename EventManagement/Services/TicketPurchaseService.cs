@@ -30,20 +30,15 @@ public sealed record TicketEligibilityResult(
     public static readonly TicketEligibilityResult Eligible = new(null, string.Empty);
 }
 
-public sealed record TicketPurchaseResult(
-    bool Succeeded,
-    string Message,
-    int? OrderId = null);
-
 /// <summary>
 /// The only place that decides whether someone may buy tickets, and the only
-/// place that records a purchase. Pages ask this service instead of
-/// re-implementing the rules, so the Details page, the purchase endpoint and
-/// future features (cart, reviews, rewards) all agree on what "eligible" and
-/// "verified purchaser" mean.
+/// place that takes tickets from stock. Pages, the cart and checkout ask this
+/// service instead of re-implementing the rules, so they all agree on what
+/// "eligible" and "verified purchaser" mean.
 /// </summary>
 public class TicketPurchaseService
 {
+    /// <summary>Most tickets of one ticket type in a single cart or order.</summary>
     public const int MaxTicketsPerOrder = 10;
 
     private readonly ApplicationDbContext _dbContext;
@@ -101,92 +96,39 @@ public class TicketPurchaseService
     }
 
     /// <summary>
-    /// Re-checks eligibility, then reserves the tickets and records a
-    /// completed order in a single transaction. The reservation is a
-    /// conditional UPDATE that only succeeds while enough tickets remain, so
-    /// two buyers racing for the last ticket cannot both get it.
+    /// Takes <paramref name="quantity"/> tickets from a ticket type's stock.
+    /// Only CheckoutService calls this, inside its order transaction, after
+    /// checking eligibility. The UPDATE's WHERE clause re-checks the rules at
+    /// the moment of writing (event on sale, ticket type enabled and in its
+    /// sales window, not the buyer's own event, enough left), so two buyers
+    /// racing for the last ticket can't both get it. Returns false, changing
+    /// nothing, when the tickets can't be taken.
     /// </summary>
-    public async Task<TicketPurchaseResult> PurchaseAsync(
+    public async Task<bool> TryReserveAsync(
         string userId,
-        int eventId,
         int ticketTypeId,
         int quantity,
+        DateTimeOffset now,
         CancellationToken cancellationToken = default)
     {
-        var eligibility = await CheckEligibilityAsync(
-            userId, eventId, ticketTypeId, quantity, cancellationToken);
-
-        if (!eligibility.IsEligible)
-        {
-            return new TicketPurchaseResult(false, eligibility.Message);
-        }
-
-        var now = _timeProvider.GetUtcNow();
-
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-        // Atomic reserve: the WHERE clause re-checks capacity, the enabled
-        // flag and the sales window at the moment of writing. If anything
-        // changed since the eligibility check, zero rows are updated.
         var reserved = await _dbContext.EventTicketTypes
             .Where(ticketType =>
                 ticketType.Id == ticketTypeId &&
-                ticketType.EventId == eventId &&
                 ticketType.IsEnabled &&
                 ticketType.SalesStartAt <= now &&
                 ticketType.SalesEndAt > now &&
-                ticketType.QuantitySold + quantity <= ticketType.QuantityAvailable)
+                ticketType.QuantitySold + quantity <= ticketType.QuantityAvailable &&
+                ticketType.Event.Status == EventStatus.Published &&
+                ticketType.Event.StartsAt > now &&
+                ticketType.Event.TicketSalesMode == TicketSalesMode.OnPlatform &&
+                ticketType.Event.OrganizerId != userId)
             .ExecuteUpdateAsync(
                 setters => setters.SetProperty(
                     ticketType => ticketType.QuantitySold,
                     ticketType => ticketType.QuantitySold + quantity),
                 cancellationToken);
 
-        if (reserved == 0)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-
-            // Explain using the current state rather than a generic failure.
-            var recheck = await CheckEligibilityAsync(
-                userId, eventId, ticketTypeId, quantity, cancellationToken);
-
-            return new TicketPurchaseResult(
-                false,
-                recheck.IsEligible
-                    ? "Those tickets were just taken by another buyer. Please try again."
-                    : recheck.Message);
-        }
-
-        // Read the price inside the transaction, after reserving, so the
-        // buyer pays the price in effect at the moment of purchase.
-        var unitPrice = await _dbContext.EventTicketTypes
-            .Where(ticketType => ticketType.Id == ticketTypeId)
-            .Select(ticketType => ticketType.Price)
-            .SingleAsync(cancellationToken);
-
-        var order = new Order
-        {
-            UserId = userId,
-            Status = OrderStatus.Completed,
-            TotalAmount = unitPrice * quantity,
-            CreatedAt = now,
-            CompletedAt = now
-        };
-
-        for (var index = 0; index < quantity; index++)
-        {
-            order.Tickets.Add(new Ticket
-            {
-                EventTicketTypeId = ticketTypeId,
-                UnitPrice = unitPrice
-            });
-        }
-
-        _dbContext.Orders.Add(order);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        return new TicketPurchaseResult(true, string.Empty, order.Id);
+        return reserved == 1;
     }
 
     /// <summary>

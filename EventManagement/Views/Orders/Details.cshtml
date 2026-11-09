@@ -1,0 +1,89 @@
+@model EventManagement.ViewModels.Orders.OrderDetailsViewModel
+
+@{
+    ViewData["Title"] = $"Order #{Model.Id}";
+}
+
+<a asp-action="Index" class="btn btn-outline-secondary mb-3">All orders</a>
+
+@if (TempData["OrderMessage"] is string orderMessage)
+{
+    <div class="alert alert-success" role="status">@orderMessage</div>
+}
+
+<h1>Order #@Model.Id</h1>
+<p class="text-muted">
+    Placed @Model.PlacedAt.LocalDateTime.ToString("MMMM d, yyyy h:mm tt") · @Model.Status
+</p>
+
+@if (Model.TicketLines.Count > 0)
+{
+    <section class="mb-4" aria-labelledby="order-tickets-heading">
+        <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2">
+            <h2 id="order-tickets-heading" class="h5">Tickets</h2>
+            <a asp-controller="Tickets" asp-action="Index">View your ticket codes</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Event</th>
+                        <th scope="col">Ticket</th>
+                        <th scope="col">Qty</th>
+                        <th scope="col" class="text-end">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in Model.TicketLines)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-controller="Events" asp-action="Details" asp-route-id="@line.EventId">@line.EventTitle</a>
+                                <div class="small text-muted">@line.EventStartsAt.LocalDateTime.ToString("ddd, MMM d, yyyy h:mm tt")</div>
+                            </td>
+                            <td>@line.TicketTypeName</td>
+                            <td>@line.Quantity × @(line.UnitPrice == 0 ? "Free" : line.UnitPrice.ToString("C"))</td>
+                            <td class="text-end">@line.LineTotal.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+@if (Model.ItemLines.Count > 0)
+{
+    <section class="mb-4" aria-labelledby="order-items-heading">
+        <h2 id="order-items-heading" class="h5">Merchandise</h2>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col">Vendor</th>
+                        <th scope="col">Qty</th>
+                        <th scope="col" class="text-end">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in Model.ItemLines)
+                    {
+                        <tr>
+                            <td>@line.ProductName</td>
+                            <td>@line.VendorName</td>
+                            <td>@line.Quantity × @line.UnitPrice.ToString("C")</td>
+                            <td class="text-end">@line.LineTotal.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+<p class="order-total">Total <strong>@Model.TotalAmount.ToString("C")</strong></p>
+
+<p class="small text-muted">
+    This was a demo checkout: no payment was taken and merchandise won't be shipped.
+</p>

@@ -23,6 +23,8 @@ builder.Services.AddScoped<EventApplicationService>();
 builder.Services.AddScoped<EventReviewService>();
 builder.Services.AddScoped<VendorProductService>();
 builder.Services.AddScoped<EventAnnouncementService>();
+builder.Services.AddScoped<CartService>();
+builder.Services.AddScoped<CheckoutService>();
 builder.Services.TryAddSingleton(TimeProvider.System);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();

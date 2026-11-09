@@ -1,0 +1,53 @@
+@model IReadOnlyList<EventManagement.ViewModels.Orders.OrderSummaryViewModel>
+
+@{
+    ViewData["Title"] = "My orders";
+}
+
+<h1>My orders</h1>
+
+@if (Model.Count == 0)
+{
+    <p>
+        You haven't placed any orders yet.
+        <a asp-controller="Events" asp-action="Index">Find events</a> or
+        <a asp-controller="Shop" asp-action="Index">browse the shop</a>.
+    </p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Order</th>
+                    <th scope="col">Placed</th>
+                    <th scope="col">Contents</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model)
+                {
+                    var contents = new List<string>();
+                    if (order.TicketCount > 0)
+                    {
+                        contents.Add(order.TicketCount == 1 ? "1 ticket" : $"{order.TicketCount} tickets");
+                    }
+                    if (order.ItemCount > 0)
+                    {
+                        contents.Add(order.ItemCount == 1 ? "1 item" : $"{order.ItemCount} items");
+                    }
+                    <tr>
+                        <td><a asp-action="Details" asp-route-id="@order.Id">#@order.Id</a></td>
+                        <td>@order.PlacedAt.LocalDateTime.ToString("MMM d, yyyy h:mm tt")</td>
+                        <td>@string.Join(", ", contents)</td>
+                        <td>@order.TotalAmount.ToString("C")</td>
+                        <td>@order.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

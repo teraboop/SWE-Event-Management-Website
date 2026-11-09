@@ -100,6 +100,54 @@ namespace EventManagement.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Commerce.CartItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("EventTicketTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("VendorProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventTicketTypeId");
+
+                    b.HasIndex("VendorProductId");
+
+                    b.HasIndex("UserId", "EventTicketTypeId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CartItems_OneLinePerTicketType")
+                        .HasFilter("[EventTicketTypeId] IS NOT NULL");
+
+                    b.HasIndex("UserId", "VendorProductId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CartItems_OneLinePerProduct")
+                        .HasFilter("[VendorProductId] IS NOT NULL");
+
+                    b.ToTable("CartItems", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CartItems_Quantity", "[Quantity] BETWEEN 1 AND 10");
+
+                            t.HasCheckConstraint("CK_CartItems_TicketOrProduct", "([EventTicketTypeId] IS NOT NULL AND [VendorProductId] IS NULL) OR ([EventTicketTypeId] IS NULL AND [VendorProductId] IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("EventManagement.Models.Commerce.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -132,6 +180,51 @@ namespace EventManagement.Data.Migrations
                     b.ToTable("Orders", null, t =>
                         {
                             t.HasCheckConstraint("CK_Orders_TotalAmount_NonNegative", "[TotalAmount] >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Commerce.OrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("VendorName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("VendorProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("VendorProductId");
+
+                    b.ToTable("OrderItems", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_OrderItems_Quantity_Positive", "[Quantity] > 0");
+
+                            t.HasCheckConstraint("CK_OrderItems_UnitPrice_NonNegative", "[UnitPrice] >= 0");
                         });
                 });
 
@@ -1075,6 +1168,31 @@ namespace EventManagement.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Commerce.CartItem", b =>
+                {
+                    b.HasOne("EventManagement.Models.Events.EventTicketType", "EventTicketType")
+                        .WithMany()
+                        .HasForeignKey("EventTicketTypeId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("EventManagement.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EventManagement.Models.Vendors.VendorProduct", "VendorProduct")
+                        .WithMany()
+                        .HasForeignKey("VendorProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("EventTicketType");
+
+                    b.Navigation("User");
+
+                    b.Navigation("VendorProduct");
+                });
+
             modelBuilder.Entity("EventManagement.Models.Commerce.Order", b =>
                 {
                     b.HasOne("EventManagement.Data.ApplicationUser", "User")
@@ -1084,6 +1202,25 @@ namespace EventManagement.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Commerce.OrderItem", b =>
+                {
+                    b.HasOne("EventManagement.Models.Commerce.Order", "Order")
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EventManagement.Models.Vendors.VendorProduct", "VendorProduct")
+                        .WithMany()
+                        .HasForeignKey("VendorProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("VendorProduct");
                 });
 
             modelBuilder.Entity("EventManagement.Models.Commerce.Ticket", b =>
@@ -1407,6 +1544,8 @@ namespace EventManagement.Data.Migrations
 
             modelBuilder.Entity("EventManagement.Models.Commerce.Order", b =>
                 {
+                    b.Navigation("Items");
+
                     b.Navigation("Tickets");
                 });
 

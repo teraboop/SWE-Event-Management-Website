@@ -232,6 +232,44 @@ public class VendorProductService
             : Fail("That product has already been removed, or isn't yours.");
     }
 
+    /// <summary>
+    /// Takes <paramref name="quantity"/> of a product from stock. Only
+    /// CheckoutService calls this, inside its order transaction. The UPDATE
+    /// re-checks that the product is in the shop, isn't the buyer's own and
+    /// has enough left, so two buyers can't both get the last one. Returns
+    /// false, changing nothing, when the stock can't be taken.
+    /// </summary>
+    public async Task<bool> TryTakeStockAsync(
+        string buyerUserId,
+        int productId,
+        int quantity,
+        CancellationToken cancellationToken = default)
+    {
+        var updated = await AvailableProducts()
+            .Where(product =>
+                product.Id == productId &&
+                product.VendorProfile.OwnerUserId != buyerUserId &&
+                product.QuantityInStock >= quantity)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(product => product.QuantityInStock, product => product.QuantityInStock - quantity),
+                cancellationToken);
+
+        return updated == 1;
+    }
+
+    /// <summary>How many of each of the vendor's products have sold in completed orders.</summary>
+    public async Task<IReadOnlyDictionary<int, int>> GetUnitsSoldAsync(
+        int vendorProfileId,
+        CancellationToken cancellationToken = default) =>
+        await _dbContext.OrderItems
+            .AsNoTracking()
+            .Where(item =>
+                item.VendorProduct.VendorProfileId == vendorProfileId &&
+                item.Order.Status == Models.Commerce.OrderStatus.Completed)
+            .GroupBy(item => item.VendorProductId)
+            .Select(group => new { ProductId = group.Key, Sold = group.Sum(item => item.Quantity) })
+            .ToDictionaryAsync(row => row.ProductId, row => row.Sold, cancellationToken);
+
     // ----- Shopper side ------------------------------------------------------
 
     public async Task<ShopViewModel> GetShopAsync(ShopFilterViewModel filter, CancellationToken cancellationToken = default)

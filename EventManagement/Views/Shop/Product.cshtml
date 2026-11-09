@@ -51,11 +51,32 @@
                 <a asp-area="Vendor" asp-page="/Products/Edit" asp-route-id="@Model.Id" class="alert-link">Edit it</a>
             </div>
         }
+        else if (!Model.IsInStock)
+        {
+            <button type="button" class="btn btn-primary" disabled>Sold out</button>
+        }
+        else if (User.Identity?.IsAuthenticated != true)
+        {
+            <p>
+                <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Context.Request.Path">Log in</a>
+                to buy this.
+            </p>
+        }
         else
         {
-            @* Placeholder for the cart. The button stays disabled until checkout exists. *@
-            <button type="button" class="btn btn-primary" disabled>Add to cart</button>
-            <p class="small text-muted mt-2">Online checkout is coming soon.</p>
+            @if (TempData["ShopError"] is string shopError)
+            {
+                <div class="alert alert-danger" role="alert">@shopError</div>
+            }
+            <form asp-controller="Cart" asp-action="AddProduct" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                <input type="hidden" name="productId" value="@Model.Id" />
+                <label for="product-quantity" class="visually-hidden">Quantity</label>
+                <input id="product-quantity" type="number" name="quantity" value="1" min="1"
+                       max="@Math.Min(EventManagement.Services.CartService.MaxProductQuantity, Model.QuantityInStock)" step="1"
+                       class="form-control ticket-quantity" />
+                <button type="submit" class="btn btn-primary">Add to cart</button>
+            </form>
+            <p class="small text-muted mt-2">Checkout is a demo: no payment is taken.</p>
         }
 
         <h2 class="h5 mt-4">About this product</h2>

@@ -25,6 +25,9 @@ public class IndexModel : PageModel
 
     public IReadOnlyList<VendorProduct> Products { get; private set; } = [];
 
+    /// <summary>Units sold per product id, from completed orders.</summary>
+    public IReadOnlyDictionary<int, int> UnitsSold { get; private set; } = new Dictionary<int, int>();
+
     [TempData]
     public string? StatusMessage { get; set; }
 
@@ -43,6 +46,7 @@ public class IndexModel : PageModel
         if (Seller.Profile is not null)
         {
             Products = await _productService.GetOwnProductsAsync(Seller.Profile.Id, HttpContext.RequestAborted);
+            UnitsSold = await _productService.GetUnitsSoldAsync(Seller.Profile.Id, HttpContext.RequestAborted);
         }
 
         return Page();

@@ -38,6 +38,9 @@ public class Order
     public DateTimeOffset? CompletedAt { get; set; }
 
     public ICollection<Ticket> Tickets { get; set; } = [];
+
+    /// <summary>Merchandise lines, one per product.</summary>
+    public ICollection<OrderItem> Items { get; set; } = [];
 }
 
 /// <summary>
