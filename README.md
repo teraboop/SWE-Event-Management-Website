@@ -10,20 +10,20 @@
 
 ## System requirements
 
-| Requirement | Status | Database Connected |
+| # | Feature | Status in code |
 | --- | --- | --- |
-| 1. User Management | Implemented | Yes |
-| 2. Browse Events | Implemented | Yes |
-| 3. Filter Events | Implemented | Yes |
-| 4. Manage Profile and Saved Events | Implemented | Yes |
-| 5. Rewards Program | Not implemented | No |
-| 6. Event and Email Notifications | Not implemented | No |
-| 7. Browse Vendor Merchandise | Not implemented | No |
-| 8. Applications for Events, Panels, or Vendors | Implemented | Yes |
-| 9. Two-Factor Authentication | Implemented | Yes |
-| 10. Validate Ticket Purchase Eligibility | Not implemented | No |
-| 11. AI Assistant Chatbot | Not implemented | No |
-| 12. AI Event and Vendor Recommendations | Partial| Yes |
-| 13. Event Reviews and Ratings | Not implemented | No |
-| 14. Personal Event Calendar | Implemented | Yes |
-| 15. Event Announcement System | Not implemented | No |
+| 1 | User Management | ✅ Implemented |
+| 2 | Browse Events | ✅ Implemented |
+| 3 | Filter Events | ✅ Implemented |
+| 4 | Manage Profile and Saved Events | ✅ Implemented |
+| 5 | Rewards Program | ✅ In progress/Implemented |
+| 6 | Event and Email Notifications | ✅ In Progress/Implemented |
+| 7 | Browse Vendor Merchandise | ✅ In Progress/Implemented |
+| 8 | Applications for Events, Panels, or Vendors | ✅ Implemented |
+| 9 | Two-Factor Authentication | ✅ Implemented |
+| 10 | Validate Ticket Purchase Eligibility | ✅ Implemented |
+| 11 | AI Assistant Chatbot | ❌ Not implemented |
+| 12 | AI Event and Vendor Recommendations | ✅ Partial/Implemented |
+| 13 | Event Reviews and Ratings | ✅ implemented |
+| 14 | Personal Event Calendar | ✅ Implemented |
+| 15 | Event Announcement System | ✅ In progress/implemented |
