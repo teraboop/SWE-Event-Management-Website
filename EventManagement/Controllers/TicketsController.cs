@@ -17,14 +17,17 @@ public class TicketsController : Controller
     private readonly TicketPurchaseService _ticketPurchaseService;
     private readonly TimeProvider _timeProvider;
     private readonly EventReviewService _eventReviewService;
+    private readonly EventAnnouncementService _eventAnnouncementService;
 
     public TicketsController(
         ApplicationDbContext dbContext,
         UserManager<ApplicationUser> userManager,
         TicketPurchaseService ticketPurchaseService,
         TimeProvider timeProvider,
-        EventReviewService eventReviewService)
+        EventReviewService eventReviewService,
+        EventAnnouncementService eventAnnouncementService)
     {
+        _eventAnnouncementService = eventAnnouncementService;
         _eventReviewService = eventReviewService;
         _dbContext = dbContext;
         _userManager = userManager;
@@ -97,9 +100,13 @@ public class TicketsController : Controller
             userId,
             events.Where(@event => @event.CanReview).Select(@event => @event.EventId).ToList());
 
+        var latestAnnouncements = await _eventAnnouncementService.GetLatestForEventsAsync(
+            events.Where(@event => @event.EndsAt >= now).Select(@event => @event.EventId).ToList());
+
         foreach (var @event in events)
         {
             @event.MyRating = myRatings.TryGetValue(@event.EventId, out var rating) ? rating : null;
+            @event.LatestAnnouncement = latestAnnouncements.GetValueOrDefault(@event.EventId);
         }
 
         // Split on when the event ends, so an event in progress counts as upcoming.

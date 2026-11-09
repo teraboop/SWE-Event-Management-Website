@@ -1,0 +1,105 @@
+@page "{id:int}"
+@model EventManagement.Areas.Organizer.Pages.Events.AnnouncementsModel
+
+@{
+    ViewData["Title"] = "Announcements";
+}
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a asp-page="./Index" class="btn btn-outline-secondary">Back to events</a>
+    @if (Model.Status == EventStatus.Published)
+    {
+        <a asp-area="" asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId" asp-fragment="announcements"
+           class="btn btn-outline-primary">View on event page</a>
+    }
+</div>
+
+<h1>Announcements for @Model.EventTitle</h1>
+<p class="text-muted">
+    Updates you post here appear on the event page for everyone, and ticket holders see the latest one on their My tickets page.
+</p>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+
+<section class="card mb-4" aria-labelledby="new-announcement-heading">
+    <div class="card-body">
+        <h2 id="new-announcement-heading" class="h5">Post an announcement</h2>
+        <form method="post" asp-route-id="@Model.EventId" class="announcement-form">
+            <div class="mb-3">
+                <label asp-for="Input.Title" class="form-label"></label>
+                <input asp-for="Input.Title" class="form-control" maxlength="150" placeholder="e.g. Doors now open at 6 PM" />
+                <span asp-validation-for="Input.Title" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.Body" class="form-label"></label>
+                <textarea asp-for="Input.Body" class="form-control" rows="4" maxlength="2000"></textarea>
+                <span asp-validation-for="Input.Body" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="Input.IsPinned" class="form-check-input" />
+                <label asp-for="Input.IsPinned" class="form-check-label"></label>
+            </div>
+            <button type="submit" class="btn btn-primary">Post announcement</button>
+        </form>
+    </div>
+</section>
+
+<h2 class="h4">Posted (@Model.Announcements.Count)</h2>
+@if (Model.Announcements.Count == 0)
+{
+    <p>You haven't posted any announcements for this event yet.</p>
+}
+
+@foreach (var announcement in Model.Announcements)
+{
+    var fieldId = $"announcement-{announcement.Id}";
+    <article class="event-announcement @(announcement.IsPinned ? "event-announcement-pinned" : null)">
+        <partial name="_EventAnnouncementBody" model="announcement" />
+
+        <div class="d-flex flex-wrap gap-2 align-items-start mt-3">
+            <details class="announcement-edit">
+                <summary class="btn btn-outline-primary btn-sm">Edit</summary>
+                <form method="post" asp-page-handler="Edit" asp-route-id="@Model.EventId" class="announcement-form mt-3">
+                    <input type="hidden" name="announcementId" value="@announcement.Id" />
+                    <div class="mb-3">
+                        <label for="@fieldId-title" class="form-label">Headline</label>
+                        <input id="@fieldId-title" name="Input.Title" value="@announcement.Title" class="form-control" maxlength="150" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="@fieldId-body" class="form-label">Message</label>
+                        <textarea id="@fieldId-body" name="Input.Body" class="form-control" rows="4" maxlength="2000" required>@announcement.Body</textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="@fieldId-pinned" name="Input.IsPinned" value="true" checked="@announcement.IsPinned" />
+                        <label class="form-check-label" for="@fieldId-pinned">Pin to the top of the event page</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Save changes</button>
+                </form>
+            </details>
+
+            <form method="post" asp-page-handler="Pin" asp-route-id="@Model.EventId">
+                <input type="hidden" name="announcementId" value="@announcement.Id" />
+                @* Written as text: Razor renders a bare bool attribute as value="value" or drops it. *@
+                <input type="hidden" name="pinned" value="@(announcement.IsPinned ? "false" : "true")" />
+                <button type="submit" class="btn btn-outline-secondary btn-sm">@(announcement.IsPinned ? "Unpin" : "Pin")</button>
+            </form>
+
+            <form method="post" asp-page-handler="Delete" asp-route-id="@Model.EventId"
+                  onsubmit="return confirm('Delete this announcement?');">
+                <input type="hidden" name="announcementId" value="@announcement.Id" />
+                <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+            </form>
+        </div>
+    </article>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

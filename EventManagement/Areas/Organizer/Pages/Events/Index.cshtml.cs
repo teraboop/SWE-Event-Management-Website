@@ -59,7 +59,8 @@ public class IndexModel : PageModel
                     .Count(application => application.Status == ApplicationStatus.Submitted),
                 AcceptsPanelApplications = @event.AcceptsPanelApplications,
                 PendingPanelApplications = @event.PanelApplications
-                    .Count(application => application.Status == ApplicationStatus.Submitted)
+                    .Count(application => application.Status == ApplicationStatus.Submitted),
+                AnnouncementCount = @event.Announcements.Count
             })
             .ToListAsync();
     }
@@ -89,5 +90,7 @@ public class IndexModel : PageModel
         public bool AcceptsPanelApplications { get; set; }
 
         public int PendingPanelApplications { get; set; }
+
+        public int AnnouncementCount { get; set; }
     }
 }

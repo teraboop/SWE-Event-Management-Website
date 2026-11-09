@@ -74,6 +74,13 @@ else
                         <td class="text-end">
                             <div class="d-inline-flex gap-2">
                                 <a asp-page="./Edit" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm text-nowrap">Edit listing</a>
+                                <a asp-page="./Announcements" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm text-nowrap">
+                                    Announcements
+                                    @if (row.AnnouncementCount > 0)
+                                    {
+                                        <span class="small text-muted ms-1">(@row.AnnouncementCount)</span>
+                                    }
+                                </a>
                                 <a asp-page="./Ticketing" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm text-nowrap">Ticket settings</a>
                                 <a asp-page="./Vendors" asp-route-id="@row.Id" class="btn btn-outline-primary btn-sm text-nowrap">
                                     Vendors
