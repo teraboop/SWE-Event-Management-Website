@@ -1,0 +1,130 @@
+@page
+@model EventManagement.Areas.Vendor.Pages.Products.IndexModel
+
+@{
+    ViewData["Title"] = "My products";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+
+@if (!Model.Seller.CanSell)
+{
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h5 card-title">Sell your merchandise online</h2>
+            @if (Model.Seller.Profile is null)
+            {
+                <p class="card-text">
+                    To list products in the shop, create a vendor profile and apply to sell online.
+                    An admin reviews each application.
+                </p>
+                <a asp-page="/Profile" class="btn btn-primary">Create vendor profile</a>
+            }
+            else
+            {
+                <p class="card-text">
+                    You can list products once an admin approves your application to sell online.
+                </p>
+                <a asp-page="/Applications/Index" class="btn btn-primary">Check my applications</a>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a asp-page="./Edit" class="btn btn-primary">Add a product</a>
+        <a asp-area="" asp-controller="Shop" asp-action="Vendor" asp-route-id="@Model.Seller.Profile!.Id" class="btn btn-outline-primary">View my storefront</a>
+    </div>
+
+    @if (Model.Products.Count == 0)
+    {
+        <p>You haven't listed any products yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">In stock</th>
+                        <th scope="col">Shop</th>
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in Model.Products)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (product.ImageId is int imageId)
+                                    {
+                                        <img src="/images/product/@imageId" alt="" class="product-thumb" />
+                                    }
+                                    else
+                                    {
+                                        <span class="product-thumb product-card-placeholder" aria-hidden="true">@product.Name[..1].ToUpperInvariant()</span>
+                                    }
+                                    @if (product.IsListed)
+                                    {
+                                        <a asp-area="" asp-controller="Shop" asp-action="Product" asp-route-id="@product.Id">@product.Name</a>
+                                    }
+                                    else
+                                    {
+                                        <span>@product.Name</span>
+                                    }
+                                </div>
+                            </td>
+                            <td>@product.Price.ToString("C")</td>
+                            <td>
+                                @if (product.QuantityInStock == 0)
+                                {
+                                    <span class="badge text-bg-warning">Out of stock</span>
+                                }
+                                else
+                                {
+                                    @product.QuantityInStock
+                                }
+                            </td>
+                            <td>
+                                @if (product.IsListed)
+                                {
+                                    <span class="badge text-bg-success">Shown</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Hidden</span>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a asp-page="./Edit" asp-route-id="@product.Id" class="btn btn-outline-primary btn-sm">Edit</a>
+                                <form method="post" asp-page-handler="SetListed" class="d-inline">
+                                    <input type="hidden" name="productId" value="@product.Id" />
+                                    <input type="hidden" name="listed" value="@(product.IsListed ? "false" : "true")" />
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm">@(product.IsListed ? "Hide" : "Show")</button>
+                                </form>
+                                <form method="post" asp-page-handler="Remove" class="d-inline"
+                                      onsubmit="return confirm('Remove this product? It will no longer appear in the shop or in this list.');">
+                                    <input type="hidden" name="productId" value="@product.Id" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}

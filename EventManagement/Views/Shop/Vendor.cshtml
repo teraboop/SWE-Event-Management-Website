@@ -1,0 +1,63 @@
+@model EventManagement.ViewModels.Shop.StorefrontViewModel
+
+@{
+    ViewData["Title"] = Model.BusinessName;
+}
+
+<a asp-action="Index" class="btn btn-outline-secondary mb-3">Back to shop</a>
+
+<header class="storefront-header">
+    <div>
+        <p class="events-page-eyebrow mb-1">Vendor</p>
+        <h1 class="mb-1">@Model.BusinessName</h1>
+        <p class="text-muted mb-3">@Model.ProductsOffered</p>
+        <p class="text-prewrap mb-0">@Model.Description</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-self-start">
+        @if (Uri.TryCreate(Model.WebsiteUrl, UriKind.Absolute, out var websiteUri)
+             && (websiteUri.Scheme == Uri.UriSchemeHttps || websiteUri.Scheme == Uri.UriSchemeHttp))
+        {
+            <a href="@websiteUri.AbsoluteUri" class="btn btn-outline-primary" target="_blank" rel="noopener noreferrer">Visit website</a>
+        }
+        @if (Model.IsOwnStore)
+        {
+            <a asp-area="Vendor" asp-page="/Products/Index" class="btn btn-primary">Manage products</a>
+        }
+    </div>
+</header>
+
+@if (Model.UpcomingEvents.Count > 0)
+{
+    <section class="my-4" aria-labelledby="storefront-events-heading">
+        <h2 id="storefront-events-heading" class="h5">Find them in person</h2>
+        <ul class="list-unstyled mb-0">
+            @foreach (var upcoming in Model.UpcomingEvents)
+            {
+                <li class="mb-1">
+                    <a asp-controller="Events" asp-action="Details" asp-route-id="@upcoming.Id">@upcoming.Title</a>
+                    <span class="text-muted small">· @upcoming.StartsAt.LocalDateTime.ToString("MMM d, yyyy") · @upcoming.City</span>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+<section class="my-4" aria-labelledby="storefront-products-heading">
+    <h2 id="storefront-products-heading" class="h5 mb-3">Products</h2>
+    @if (Model.Products.Count == 0)
+    {
+        <p>Nothing's for sale here yet.</p>
+    }
+    else
+    {
+        ViewData["HideVendor"] = true;
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
+            @foreach (var product in Model.Products)
+            {
+                <div class="col">
+                    <partial name="_ProductCard" model="product" view-data="ViewData" />
+                </div>
+            }
+        </div>
+    }
+</section>

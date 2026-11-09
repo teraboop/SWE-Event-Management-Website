@@ -1,0 +1,91 @@
+@model EventManagement.ViewModels.Shop.ProductDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<a asp-action="Index" class="btn btn-outline-secondary mb-3">Back to shop</a>
+
+<div class="row g-4 product-details">
+    <div class="col-md-6">
+        <div class="product-details-image">
+            @if (Model.ImageId is int imageId)
+            {
+                <img src="/images/product/@imageId" alt="Photo of @Model.Name" />
+            }
+            else
+            {
+                <span class="product-card-placeholder" aria-hidden="true">@Model.Name[..1].ToUpperInvariant()</span>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <h1 class="mb-1">@Model.Name</h1>
+        <p class="mb-3">
+            Sold by
+            <a asp-action="Vendor" asp-route-id="@Model.VendorId">@Model.VendorName</a>
+        </p>
+
+        <p class="product-details-price">@Model.Price.ToString("C")</p>
+
+        <p>
+            @if (!Model.IsInStock)
+            {
+                <span class="badge text-bg-secondary">Out of stock</span>
+            }
+            else if (Model.QuantityInStock <= 5)
+            {
+                <span class="text-danger fw-semibold">Only @Model.QuantityInStock left</span>
+            }
+            else
+            {
+                <span class="text-success fw-semibold">In stock</span>
+            }
+        </p>
+
+        @if (Model.IsOwnProduct)
+        {
+            <div class="alert alert-info" role="status">
+                This is your product.
+                <a asp-area="Vendor" asp-page="/Products/Edit" asp-route-id="@Model.Id" class="alert-link">Edit it</a>
+            </div>
+        }
+        else
+        {
+            @* Placeholder for the cart. The button stays disabled until checkout exists. *@
+            <button type="button" class="btn btn-primary" disabled>Add to cart</button>
+            <p class="small text-muted mt-2">Online checkout is coming soon.</p>
+        }
+
+        <h2 class="h5 mt-4">About this product</h2>
+        <p class="text-prewrap">@Model.Description</p>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <form asp-action="Remove" asp-route-id="@Model.Id" method="post" class="mt-4"
+                  onsubmit="return confirm('Remove this product from the shop?');">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Remove product (admin)</button>
+            </form>
+        }
+    </div>
+</div>
+
+@if (Model.MoreFromVendor.Count > 0)
+{
+    <section class="mt-5" aria-labelledby="more-heading">
+        <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-3">
+            <h2 id="more-heading" class="h5 mb-0">More from @Model.VendorName</h2>
+            <a asp-action="Vendor" asp-route-id="@Model.VendorId">See everything</a>
+        </div>
+        @{ ViewData["HideVendor"] = true; }
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+            @foreach (var product in Model.MoreFromVendor)
+            {
+                <div class="col">
+                    <partial name="_ProductCard" model="product" view-data="ViewData" />
+                </div>
+            }
+        </div>
+    </section>
+}

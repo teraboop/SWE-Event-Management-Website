@@ -44,6 +44,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<EventReview> EventReviews => Set<EventReview>();
 
+    public DbSet<VendorProduct> VendorProducts => Set<VendorProduct>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -563,6 +565,41 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany()
                 .HasForeignKey(review => review.AuthorUserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<VendorProduct>(entity =>
+        {
+            entity.ToTable("VendorProducts", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_VendorProducts_Price_Positive",
+                    "[Price] > 0");
+
+                // The future checkout takes stock with a conditional UPDATE;
+                // this keeps any write from overselling.
+                table.HasCheckConstraint(
+                    "CK_VendorProducts_QuantityInStock_NonNegative",
+                    "[QuantityInStock] >= 0");
+            });
+
+            entity.Property(product => product.Name).HasMaxLength(150).IsRequired();
+            entity.Property(product => product.Description).HasMaxLength(2000).IsRequired();
+            entity.Property(product => product.Price).HasPrecision(10, 2);
+            entity.Property(product => product.IsListed).HasDefaultValue(true);
+
+            // The vendor's list, and the shop's listed, unarchived products newest first.
+            entity.HasIndex(product => new { product.VendorProfileId, product.ArchivedAt });
+            entity.HasIndex(product => new { product.IsListed, product.ArchivedAt, product.CreatedAt });
+
+            entity.HasOne(product => product.VendorProfile)
+                .WithMany(profile => profile.Products)
+                .HasForeignKey(product => product.VendorProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(product => product.Image)
+                .WithMany()
+                .HasForeignKey(product => product.ImageId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

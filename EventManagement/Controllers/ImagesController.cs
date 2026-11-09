@@ -1,21 +1,27 @@
 using EventManagement.Data;
 using EventManagement.Models.Events;
+using EventManagement.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventManagement.Controllers;
 
-/// <summary>Serves event images stored in the database.</summary>
+/// <summary>Serves uploaded images (event backgrounds and product photos) stored in the database.</summary>
 public class ImagesController : Controller
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly VendorProductService _productService;
 
-    public ImagesController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
+    public ImagesController(
+        ApplicationDbContext dbContext,
+        UserManager<ApplicationUser> userManager,
+        VendorProductService productService)
     {
         _dbContext = dbContext;
         _userManager = userManager;
+        _productService = productService;
     }
 
     /// <summary>
@@ -36,6 +42,28 @@ public class ImagesController : Controller
             return NotFound();
         }
 
+        return await ServeAsync(id, isPublic);
+    }
+
+    /// <summary>
+    /// GET /images/product/5. Anyone may see the photo of a product in the
+    /// shop. Photos of hidden products are only shown to the vendor and admins.
+    /// </summary>
+    [HttpGet("/images/product/{id:int}")]
+    public async Task<IActionResult> Product(int id)
+    {
+        var isPublic = await _productService.AvailableProducts().AnyAsync(product => product.ImageId == id);
+
+        if (!isPublic && !await CanSeePrivateProductImageAsync(id))
+        {
+            return NotFound();
+        }
+
+        return await ServeAsync(id, isPublic);
+    }
+
+    private async Task<IActionResult> ServeAsync(int id, bool isPublic)
+    {
         var image = await _dbContext.EventImages
             .AsNoTracking()
             .Where(image => image.Id == id)
@@ -53,6 +81,19 @@ public class ImagesController : Controller
         Response.Headers.XContentTypeOptions = "nosniff";
 
         return File(image.Data, image.ContentType);
+    }
+
+    private async Task<bool> CanSeePrivateProductImageAsync(int imageId)
+    {
+        var userId = _userManager.GetUserId(User);
+        if (userId is null)
+        {
+            return false;
+        }
+
+        return User.IsInRole("Admin") ||
+               await _dbContext.VendorProducts.AnyAsync(product =>
+                   product.ImageId == imageId && product.VendorProfile.OwnerUserId == userId);
     }
 
     private async Task<bool> CanSeePrivateImageAsync(int imageId)

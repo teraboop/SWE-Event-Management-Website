@@ -1,0 +1,141 @@
+@model EventManagement.ViewModels.Shop.ShopViewModel
+@using EventManagement.ViewModels.Shop
+
+@{
+    ViewData["Title"] = "Shop";
+    var filter = Model.Filter;
+    var hasFilters = !string.IsNullOrWhiteSpace(filter.Search) || filter.VendorId is not null ||
+                     filter.MaximumPrice is not null || filter.InStockOnly;
+
+    // Keeps the current filters when moving between pages.
+    string PageUrl(int page) => Url.Action("Index", new
+    {
+        filter.Search,
+        filter.VendorId,
+        filter.MaximumPrice,
+        InStockOnly = filter.InStockOnly ? "true" : null,
+        Sort = filter.Sort == ShopSort.Newest ? null : filter.Sort.ToString(),
+        Page = page
+    })!;
+}
+
+<div class="events-page">
+    <header class="events-page-header">
+        <p class="events-page-eyebrow">Vendor marketplace</p>
+        <h1>Shop</h1>
+        <p class="events-page-lead">
+            Merchandise from the vendors who sell at our events.
+        </p>
+        <p class="mb-0">
+            Selling something?
+            <a asp-area="Vendor" asp-page="/Applications/Index">Become a vendor</a>
+        </p>
+    </header>
+
+    @if (TempData["ShopMessage"] is string shopMessage)
+    {
+        <div class="alert alert-info" role="status">@shopMessage</div>
+    }
+
+    <section class="events-filter-panel" aria-labelledby="shop-filter-heading">
+        <div class="events-filter-header">
+            <div>
+                <p class="events-filter-kicker">Browse</p>
+                <h2 id="shop-filter-heading">Find something you like</h2>
+            </div>
+            @if (hasFilters)
+            {
+                <a asp-action="Index" class="events-clear-filters">Clear filters</a>
+            }
+        </div>
+
+        <form method="get" class="events-filter-form">
+            <div class="events-filter-field">
+                <label for="shop-search" class="form-label">Search</label>
+                <input id="shop-search" name="Search" value="@filter.Search" class="form-control" type="search" placeholder="Name, description or vendor" />
+            </div>
+
+            <div class="events-filter-field">
+                <label for="shop-vendor" class="form-label">Vendor</label>
+                <select id="shop-vendor" name="VendorId" class="form-select">
+                    <option value="">All vendors</option>
+                    @foreach (var vendor in Model.Vendors)
+                    {
+                        <option value="@vendor.Id" selected="@(filter.VendorId == vendor.Id)">@vendor.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="events-filter-field">
+                <label for="shop-max-price" class="form-label">Maximum price</label>
+                <input id="shop-max-price" name="MaximumPrice" value="@filter.MaximumPrice" class="form-control" type="number" min="0" step="0.01" placeholder="Any price" />
+            </div>
+
+            <div class="events-filter-field">
+                <label for="shop-sort" class="form-label">Sort by</label>
+                <select id="shop-sort" name="Sort" class="form-select">
+                    <option value="@ShopSort.Newest" selected="@(filter.Sort == ShopSort.Newest)">Newest</option>
+                    <option value="@ShopSort.PriceLowToHigh" selected="@(filter.Sort == ShopSort.PriceLowToHigh)">Price: low to high</option>
+                    <option value="@ShopSort.PriceHighToLow" selected="@(filter.Sort == ShopSort.PriceHighToLow)">Price: high to low</option>
+                    <option value="@ShopSort.Name" selected="@(filter.Sort == ShopSort.Name)">Name</option>
+                </select>
+            </div>
+
+            <fieldset class="events-filter-field events-filter-checks">
+                <legend class="form-label">Availability</legend>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="shop-in-stock" name="InStockOnly" value="true" checked="@filter.InStockOnly" />
+                    <label class="form-check-label" for="shop-in-stock">In stock only</label>
+                </div>
+            </fieldset>
+
+            <div class="events-filter-submit">
+                <button type="submit" class="btn btn-primary">Apply filters</button>
+            </div>
+        </form>
+    </section>
+
+    <section aria-labelledby="shop-results-heading">
+        <h2 id="shop-results-heading" class="h5 mb-3">
+            @(Model.TotalCount == 1 ? "1 product" : $"{Model.TotalCount} products")
+        </h2>
+
+        @if (Model.Products.Count == 0)
+        {
+            <p>
+                @(hasFilters ? "No products match these filters." : "Nothing's for sale yet. Check back soon.")
+            </p>
+        }
+        else
+        {
+            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
+                @foreach (var product in Model.Products)
+                {
+                    <div class="col">
+                        <partial name="_ProductCard" model="product" />
+                    </div>
+                }
+            </div>
+
+            @if (Model.PageCount > 1)
+            {
+                <nav class="mt-4" aria-label="Shop pages">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(filter.Page <= 1 ? "disabled" : null)">
+                            <a class="page-link" href="@PageUrl(filter.Page - 1)">Previous</a>
+                        </li>
+                        @for (var pageNumber = 1; pageNumber <= Model.PageCount; pageNumber++)
+                        {
+                            <li class="page-item @(pageNumber == filter.Page ? "active" : null)">
+                                <a class="page-link" href="@PageUrl(pageNumber)" aria-current="@(pageNumber == filter.Page ? "page" : null)">@pageNumber</a>
+                            </li>
+                        }
+                        <li class="page-item @(filter.Page >= Model.PageCount ? "disabled" : null)">
+                            <a class="page-link" href="@PageUrl(filter.Page + 1)">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </section>
+</div>

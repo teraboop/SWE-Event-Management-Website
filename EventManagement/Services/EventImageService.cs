@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace EventManagement.Services;
 
 /// <summary>
-/// Checks and stores uploaded event images. The type is decided from the
+/// Checks and stores uploaded images: event backgrounds and product photos. The type is decided from the
 /// file's first bytes, not the name or the browser's Content-Type, so only
 /// real JPEG, PNG and WebP images are accepted and served.
 /// </summary>
@@ -66,14 +66,15 @@ public class EventImageService
 
     /// <summary>
     /// Deletes an image nothing points at any more, e.g. after an organizer
-    /// replaces their event's background. Images still used by an event or
-    /// an application are kept.
+    /// replaces their event's background. Images still used by an event, an
+    /// application or a product are kept.
     /// </summary>
     public async Task DeleteIfUnusedAsync(int imageId, CancellationToken cancellationToken = default)
     {
         var inUse =
             await _dbContext.Events.AnyAsync(@event => @event.BackgroundImageId == imageId, cancellationToken) ||
-            await _dbContext.EventApplications.AnyAsync(application => application.BackgroundImageId == imageId, cancellationToken);
+            await _dbContext.EventApplications.AnyAsync(application => application.BackgroundImageId == imageId, cancellationToken) ||
+            await _dbContext.VendorProducts.AnyAsync(product => product.ImageId == imageId, cancellationToken);
 
         if (!inUse)
         {

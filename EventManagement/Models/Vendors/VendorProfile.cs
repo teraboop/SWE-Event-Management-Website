@@ -32,4 +32,6 @@ public class VendorProfile
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public ICollection<VendorApplication> Applications { get; set; } = [];
+
+    public ICollection<VendorProduct> Products { get; set; } = [];
 }

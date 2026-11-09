@@ -46,6 +46,9 @@ public class EventDetailsViewModel
     /// <summary>The signed-in vendor's current application status for this event, if any.</summary>
     public EventManagement.Models.Applications.ApplicationStatus? VendorApplicationStatus { get; set; }
 
+    /// <summary>Vendors approved to sell at this event, listed publicly.</summary>
+    public IReadOnlyList<EventManagement.ViewModels.Shop.EventVendorViewModel> ApprovedVendors { get; set; } = [];
+
     public bool AcceptsPanelApplications { get; set; }
 
     /// <summary>Approved panels, listed publicly on the event page.</summary>

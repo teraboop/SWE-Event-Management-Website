@@ -18,6 +18,7 @@ public class EventsController : Controller
     private readonly VendorApplicationService _vendorApplicationService;
     private readonly PanelApplicationService _panelApplicationService;
     private readonly EventReviewService _eventReviewService;
+    private readonly VendorProductService _vendorProductService;
 
     public EventsController(
         EventDiscoveryService eventDiscoveryService,
@@ -26,8 +27,10 @@ public class EventsController : Controller
         TicketPurchaseService ticketPurchaseService,
         VendorApplicationService vendorApplicationService,
         PanelApplicationService panelApplicationService,
-        EventReviewService eventReviewService)
+        EventReviewService eventReviewService,
+        VendorProductService vendorProductService)
     {
+        _vendorProductService = vendorProductService;
         _panelApplicationService = panelApplicationService;
         _eventReviewService = eventReviewService;
         _eventDiscoveryService = eventDiscoveryService;
@@ -63,6 +66,7 @@ public class EventsController : Controller
         model.ReturnUrl = Url.Action(nameof(Details), new { id }) ?? "/Events";
 
         model.OrganizerRating = await _eventReviewService.GetOrganizerRatingAsync(id);
+        model.ApprovedVendors = await _vendorProductService.GetEventVendorsAsync(id);
 
         if (model.HasEnded)
         {
