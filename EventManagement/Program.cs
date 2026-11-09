@@ -20,6 +20,7 @@ builder.Services.AddScoped<VendorApplicationService>();
 builder.Services.AddScoped<PanelApplicationService>();
 builder.Services.AddScoped<EventImageService>();
 builder.Services.AddScoped<EventApplicationService>();
+builder.Services.AddScoped<EventReviewService>();
 builder.Services.TryAddSingleton(TimeProvider.System);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();

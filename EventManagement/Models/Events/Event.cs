@@ -104,4 +104,6 @@ public class Event
     public int? BackgroundImageId { get; set; }
 
     public EventImage? BackgroundImage { get; set; }
+
+    public ICollection<Reviews.EventReview> Reviews { get; set; } = [];
 }

@@ -68,6 +68,17 @@ public class EventDetailsViewModel
     public string OrganizerName { get; set; } = string.Empty;
 
     public IReadOnlyList<string> Interests { get; set; } = [];
+
+    /// <summary>This event's own rating. Only events that have ended can be reviewed.</summary>
+    public EventManagement.ViewModels.Reviews.RatingSummary EventRating { get; set; } =
+        EventManagement.ViewModels.Reviews.RatingSummary.Empty;
+
+    /// <summary>Rating across all of this organizer's reviewed events.</summary>
+    public EventManagement.ViewModels.Reviews.RatingSummary OrganizerRating { get; set; } =
+        EventManagement.ViewModels.Reviews.RatingSummary.Empty;
+
+    /// <summary>The Reviews section; loaded on the full page once the event has ended.</summary>
+    public EventManagement.ViewModels.Reviews.EventReviewsViewModel? Reviews { get; set; }
 }
 
 public class EventTicketTypeDetailsViewModel

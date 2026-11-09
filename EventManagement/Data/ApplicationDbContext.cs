@@ -2,6 +2,7 @@
 using EventManagement.Models.Events;
 using EventManagement.Models.Panels;
 using EventManagement.Models.Profile;
+using EventManagement.Models.Reviews;
 using EventManagement.Models.Vendors;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<EventApplication> EventApplications => Set<EventApplication>();
 
     public DbSet<EventApplicationInterest> EventApplicationInterests => Set<EventApplicationInterest>();
+
+    public DbSet<EventReview> EventReviews => Set<EventReview>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -528,6 +531,37 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasOne(interest => interest.InterestCategory)
                 .WithMany()
                 .HasForeignKey(interest => interest.InterestCategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<EventReview>(entity =>
+        {
+            entity.ToTable("EventReviews", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_EventReviews_Rating",
+                    "[Rating] BETWEEN 1 AND 5");
+            });
+
+            entity.Property(review => review.Comment).HasMaxLength(2000);
+
+            // One review per person per event; editing replaces it.
+            entity.HasIndex(review => new { review.EventId, review.AuthorUserId })
+                .IsUnique()
+                .HasDatabaseName("IX_EventReviews_OnePerAuthor");
+
+            // The event page lists the newest reviews first.
+            entity.HasIndex(review => new { review.EventId, review.CreatedAt });
+
+            entity.HasOne(review => review.Event)
+                .WithMany(@event => @event.Reviews)
+                .HasForeignKey(review => review.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Deleting an account deletes its reviews, like its orders and saved events.
+            entity.HasOne(review => review.Author)
+                .WithMany()
+                .HasForeignKey(review => review.AuthorUserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

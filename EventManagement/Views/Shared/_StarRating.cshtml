@@ -1,0 +1,16 @@
+@model double
+@using System.Globalization
+
+@*
+    Five stars filled to a rating from 0 to 5, e.g. 4.3 fills four and a bit.
+    Screen readers get the number instead of the stars. The stars scale with
+    the surrounding font size.
+*@
+@{
+    var rating = Math.Clamp(Model, 0, 5);
+    var fillPercent = (rating / 5 * 100).ToString("0.#", CultureInfo.InvariantCulture);
+    var label = $"Rated {rating.ToString("0.#")} out of 5";
+}
+<span class="stars" role="img" aria-label="@label" title="@label">
+    <span class="stars-fill" style="width: @fillPercent%"></span>
+</span>

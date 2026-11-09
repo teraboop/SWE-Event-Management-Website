@@ -1151,3 +1151,195 @@ body {
 .text-prewrap {
   white-space: pre-line;
 }
+
+/* Star ratings. Two layers of five stars: grey underneath, and gold on top
+   clipped to the rating's width, so 4.3 shows four and a bit gold stars.
+   The stars scale with the surrounding font size. */
+.stars {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  color: #d1d5db;
+  white-space: nowrap;
+  vertical-align: -0.1em;
+}
+
+.stars::before {
+  content: "★★★★★";
+}
+
+.stars-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  overflow: hidden;
+  color: #f59e0b;
+}
+
+.stars-fill::before {
+  content: "★★★★★";
+}
+
+.rating-inline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Rating summary at the top of the Reviews section. */
+.review-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 2.5rem;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-alt);
+}
+
+.review-summary-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.review-summary-score .stars {
+  font-size: 1.4rem;
+}
+
+.review-summary-average {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.review-breakdown {
+  flex: 1 1 14rem;
+  max-width: 24rem;
+}
+
+.review-breakdown li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.review-breakdown-label {
+  width: 2.25rem;
+  white-space: nowrap;
+}
+
+.review-breakdown-count {
+  width: 2rem;
+  text-align: right;
+  color: var(--muted);
+}
+
+.review-bar {
+  flex: 1;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background-color: var(--border);
+}
+
+.review-bar > span {
+  display: block;
+  height: 100%;
+  background-color: #f59e0b;
+}
+
+/* Individual reviews. */
+.event-review {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.event-review-own {
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand);
+  border-radius: var(--radius);
+}
+
+.review-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+
+.review-verified {
+  padding: 0.1rem 0.5rem;
+  color: #065f46;
+  background-color: #d1fae5;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.review-edit > summary {
+  list-style: none;
+}
+
+.review-edit > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Star picker on the review form. The radios are listed 5 down to 1 and
+   shown in reverse, so "this star and every star after it in the markup"
+   is "this star and every star to its left" on screen. */
+.star-input {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.star-input-options {
+  position: relative;
+  display: inline-flex;
+  flex-direction: row-reverse;
+}
+
+.star-input-radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.star-input-options label {
+  padding: 0 0.1rem;
+  font-size: 2rem;
+  line-height: 1;
+  color: #d1d5db;
+  cursor: pointer;
+}
+
+.star-input-radio:checked ~ label {
+  color: #f59e0b;
+}
+
+.star-input-options:hover label {
+  color: #d1d5db;
+}
+
+.star-input-options label:hover,
+.star-input-options label:hover ~ label {
+  color: #f59e0b;
+}
+
+.star-input-radio:focus-visible + label {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}

@@ -17,6 +17,7 @@ public class EventsController : Controller
     private readonly TicketPurchaseService _ticketPurchaseService;
     private readonly VendorApplicationService _vendorApplicationService;
     private readonly PanelApplicationService _panelApplicationService;
+    private readonly EventReviewService _eventReviewService;
 
     public EventsController(
         EventDiscoveryService eventDiscoveryService,
@@ -24,9 +25,11 @@ public class EventsController : Controller
         ApplicationDbContext dbContext,
         TicketPurchaseService ticketPurchaseService,
         VendorApplicationService vendorApplicationService,
-        PanelApplicationService panelApplicationService)
+        PanelApplicationService panelApplicationService,
+        EventReviewService eventReviewService)
     {
         _panelApplicationService = panelApplicationService;
+        _eventReviewService = eventReviewService;
         _eventDiscoveryService = eventDiscoveryService;
         _userManager = userManager;
         _dbContext = dbContext;
@@ -58,6 +61,17 @@ public class EventsController : Controller
         }
 
         model.ReturnUrl = Url.Action(nameof(Details), new { id }) ?? "/Events";
+
+        model.OrganizerRating = await _eventReviewService.GetOrganizerRatingAsync(id);
+
+        if (model.HasEnded)
+        {
+            model.Reviews = await _eventReviewService.GetEventReviewsAsync(id, UserId);
+            model.Reviews.TicketSalesMode = model.TicketSalesMode;
+            model.Reviews.ViewerIsAdmin = User.IsInRole("Admin");
+            model.Reviews.ReturnUrl = model.ReturnUrl;
+            model.EventRating = model.Reviews.Summary;
+        }
 
         if (UserId is not null)
         {
@@ -91,6 +105,17 @@ public class EventsController : Controller
         }
 
         model.ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl! : Url.Action(nameof(Index)) ?? "/Events";
+
+        // The quick view shows the event's own rating once it's over, and the
+        // organizer's track record before that.
+        if (model.HasEnded)
+        {
+            model.EventRating = await _eventReviewService.GetEventRatingAsync(id);
+        }
+        else
+        {
+            model.OrganizerRating = await _eventReviewService.GetOrganizerRatingAsync(id);
+        }
 
         return PartialView("_EventSummaryModal", model);
     }

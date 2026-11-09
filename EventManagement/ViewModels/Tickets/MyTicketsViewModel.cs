@@ -26,6 +26,12 @@ public class MyTicketsEventViewModel
 
     public EventStatus Status { get; set; }
 
+    /// <summary>The event is over and wasn't cancelled, so the ticket holder can review it.</summary>
+    public bool CanReview { get; set; }
+
+    /// <summary>Stars the user gave this event, if they've reviewed it.</summary>
+    public int? MyRating { get; set; }
+
     public IReadOnlyList<MyTicketViewModel> Tickets { get; set; } = [];
 }
 
