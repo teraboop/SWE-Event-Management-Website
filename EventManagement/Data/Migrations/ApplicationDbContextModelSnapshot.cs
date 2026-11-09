@@ -259,6 +259,53 @@ namespace EventManagement.Data.Migrations
                     b.ToTable("Events", (string)null);
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Events.EventAnnouncement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PostedByName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PostedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId", "IsPinned", "CreatedAt");
+
+                    b.ToTable("EventAnnouncements", (string)null);
+                });
+
             modelBuilder.Entity("EventManagement.Models.Events.EventApplication", b =>
                 {
                     b.Property<int>("Id")
@@ -1084,6 +1131,17 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("Organizer");
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Events.EventAnnouncement", b =>
+                {
+                    b.HasOne("EventManagement.Models.Events.Event", "Event")
+                        .WithMany("Announcements")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+                });
+
             modelBuilder.Entity("EventManagement.Models.Events.EventApplication", b =>
                 {
                     b.HasOne("EventManagement.Data.ApplicationUser", "Applicant")
@@ -1354,6 +1412,8 @@ namespace EventManagement.Data.Migrations
 
             modelBuilder.Entity("EventManagement.Models.Events.Event", b =>
                 {
+                    b.Navigation("Announcements");
+
                     b.Navigation("Interests");
 
                     b.Navigation("PanelApplications");

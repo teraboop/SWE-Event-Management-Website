@@ -46,6 +46,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<VendorProduct> VendorProducts => Set<VendorProduct>();
 
+    public DbSet<EventAnnouncement> EventAnnouncements => Set<EventAnnouncement>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -600,6 +602,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany()
                 .HasForeignKey(product => product.ImageId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<EventAnnouncement>(entity =>
+        {
+            entity.ToTable("EventAnnouncements");
+
+            entity.Property(announcement => announcement.Title).HasMaxLength(150).IsRequired();
+            entity.Property(announcement => announcement.Body).HasMaxLength(2000).IsRequired();
+            entity.Property(announcement => announcement.PostedByUserId).HasMaxLength(450);
+            entity.Property(announcement => announcement.PostedByName).HasMaxLength(256);
+
+            // The event page lists pinned announcements first, then newest.
+            entity.HasIndex(announcement => new { announcement.EventId, announcement.IsPinned, announcement.CreatedAt });
+
+            entity.HasOne(announcement => announcement.Event)
+                .WithMany(@event => @event.Announcements)
+                .HasForeignKey(announcement => announcement.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

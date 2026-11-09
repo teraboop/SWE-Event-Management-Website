@@ -1469,3 +1469,69 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
+
+/* Event announcements: event page, organizer page and My tickets. */
+.event-announcement {
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.event-announcement-pinned {
+  border-left: 4px solid var(--accent);
+  background-color: #fdf2f8;
+}
+
+.event-announcement-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+
+.announcement-badge {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.announcement-badge-pinned {
+  color: #9d174d;
+  background-color: #fce7f3;
+}
+
+.announcement-badge-new {
+  color: #3730a3;
+  background-color: var(--brand-soft);
+}
+
+.announcement-older > summary {
+  margin-bottom: 0.75rem;
+  color: var(--brand);
+  cursor: pointer;
+}
+
+.announcement-edit > summary {
+  list-style: none;
+}
+
+.announcement-edit > summary::-webkit-details-marker {
+  display: none;
+}
+
+.announcement-edit[open] {
+  flex-basis: 100%;
+}
+
+.announcement-form {
+  max-width: 44rem;
+}
+
+.ticket-announcement {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background-color: var(--surface-alt);
+}

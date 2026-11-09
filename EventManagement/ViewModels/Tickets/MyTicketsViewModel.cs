@@ -32,6 +32,9 @@ public class MyTicketsEventViewModel
     /// <summary>Stars the user gave this event, if they've reviewed it.</summary>
     public int? MyRating { get; set; }
 
+    /// <summary>The organizer's newest announcement, shown for upcoming events.</summary>
+    public EventManagement.ViewModels.Events.LatestAnnouncement? LatestAnnouncement { get; set; }
+
     public IReadOnlyList<MyTicketViewModel> Tickets { get; set; } = [];
 }
 

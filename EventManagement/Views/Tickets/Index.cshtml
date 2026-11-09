@@ -23,6 +23,19 @@
                         · @ticketEvent.VenueName, @ticketEvent.City
                     </p>
 
+                    @if (ticketEvent.LatestAnnouncement is { } latest)
+                    {
+                        <p class="ticket-announcement mb-3">
+                            <span class="fw-semibold">Latest update:</span>
+                            <a asp-controller="Events" asp-action="Details" asp-route-id="@ticketEvent.EventId" asp-fragment="announcements">@latest.Title</a>
+                            <span class="text-muted small">· @latest.CreatedAt.LocalDateTime.ToString("MMM d")</span>
+                            @if (latest.IsNew)
+                            {
+                                <span class="announcement-badge announcement-badge-new">New</span>
+                            }
+                        </p>
+                    }
+
                     @if (ticketEvent.CanReview)
                     {
                         <div class="rating-inline mb-3">

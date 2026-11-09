@@ -19,6 +19,7 @@ public class EventsController : Controller
     private readonly PanelApplicationService _panelApplicationService;
     private readonly EventReviewService _eventReviewService;
     private readonly VendorProductService _vendorProductService;
+    private readonly EventAnnouncementService _eventAnnouncementService;
 
     public EventsController(
         EventDiscoveryService eventDiscoveryService,
@@ -28,8 +29,10 @@ public class EventsController : Controller
         VendorApplicationService vendorApplicationService,
         PanelApplicationService panelApplicationService,
         EventReviewService eventReviewService,
-        VendorProductService vendorProductService)
+        VendorProductService vendorProductService,
+        EventAnnouncementService eventAnnouncementService)
     {
+        _eventAnnouncementService = eventAnnouncementService;
         _vendorProductService = vendorProductService;
         _panelApplicationService = panelApplicationService;
         _eventReviewService = eventReviewService;
@@ -67,6 +70,7 @@ public class EventsController : Controller
 
         model.OrganizerRating = await _eventReviewService.GetOrganizerRatingAsync(id);
         model.ApprovedVendors = await _vendorProductService.GetEventVendorsAsync(id);
+        model.Announcements = await _eventAnnouncementService.GetForEventAsync(id);
 
         if (model.HasEnded)
         {

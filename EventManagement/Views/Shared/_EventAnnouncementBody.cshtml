@@ -1,0 +1,22 @@
+@model EventManagement.ViewModels.Events.EventAnnouncementItem
+
+@* One announcement's headline, date and message. Used on the event page and the organizer's Announcements page. *@
+<header class="event-announcement-header">
+    <h3 class="h6 mb-0">@Model.Title</h3>
+    @if (Model.IsPinned)
+    {
+        <span class="announcement-badge announcement-badge-pinned">Pinned</span>
+    }
+    @if (Model.IsNew)
+    {
+        <span class="announcement-badge announcement-badge-new">New</span>
+    }
+</header>
+<p class="small text-muted mb-2">
+    <time datetime="@Model.CreatedAt.ToString("o")">@Model.CreatedAt.LocalDateTime.ToString("MMMM d, yyyy h:mm tt")</time>
+    @if (Model.UpdatedAt is DateTimeOffset updatedAt)
+    {
+        <span>· edited @updatedAt.LocalDateTime.ToString("MMMM d")</span>
+    }
+</p>
+<p class="text-prewrap mb-0">@Model.Body</p>
