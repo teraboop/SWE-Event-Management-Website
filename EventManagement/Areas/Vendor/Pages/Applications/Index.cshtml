@@ -49,6 +49,7 @@ else
                     {
                         case ApplicationStatus.Approved:
                             <p class="card-text">You're approved to sell merchandise on the website.</p>
+                            <a asp-page="/Products/Index" class="btn btn-primary btn-sm">Manage my products</a>
                             break;
                         case ApplicationStatus.Submitted:
                             <p class="card-text">Your application is waiting for an admin to review it.</p>

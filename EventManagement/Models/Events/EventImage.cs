@@ -1,7 +1,9 @@
 namespace EventManagement.Models.Events;
 
 /// <summary>
-/// An uploaded image (an event's page background). Stored in the database
+/// An uploaded image: an event's page background or a vendor's product photo.
+/// (The name predates product photos; one table keeps a single upload and
+/// serving path.) Stored in the database
 /// rather than on disk so every copy of the app that shares the database can
 /// serve it; served by ImagesController.
 /// </summary>

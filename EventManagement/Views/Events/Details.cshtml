@@ -216,12 +216,38 @@ else
     </section>
 }
 
-@if (Model.AcceptsVendorApplications && !Model.HasEnded && !Model.IsOwnEvent)
+@{
+    var canApplyAsVendor = Model.AcceptsVendorApplications && !Model.HasEnded && !Model.IsOwnEvent;
+}
+@if (Model.ApprovedVendors.Count > 0 || canApplyAsVendor)
 {
     <section class="my-4" aria-labelledby="vendors-heading">
         <h2 id="vendors-heading" class="h4">Vendors</h2>
 
-        @if (User.Identity?.IsAuthenticated != true)
+        @if (Model.ApprovedVendors.Count > 0)
+        {
+            <ul class="event-vendors list-unstyled">
+                @foreach (var vendor in Model.ApprovedVendors)
+                {
+                    <li class="event-vendor">
+                        <div>
+                            <strong>@vendor.BusinessName</strong>
+                            <div class="small text-muted">@vendor.ProductsOffered</div>
+                        </div>
+                        @if (vendor.HasStorefront)
+                        {
+                            <a asp-controller="Shop" asp-action="Vendor" asp-route-id="@vendor.VendorId" class="btn btn-outline-primary btn-sm">Shop online</a>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+
+        @if (!canApplyAsVendor)
+        {
+            // Nothing to apply for; the list above is all this section shows.
+        }
+        else if (User.Identity?.IsAuthenticated != true)
         {
             <p>
                 This event is accepting vendor applications.

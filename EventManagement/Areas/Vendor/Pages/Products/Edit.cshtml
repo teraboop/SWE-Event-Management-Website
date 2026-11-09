@@ -1,0 +1,82 @@
+@page "{id:int?}"
+@model EventManagement.Areas.Vendor.Pages.Products.EditModel
+@using EventManagement.Services
+
+@{
+    ViewData["Title"] = Model.IsNew ? "Add a product" : "Edit product";
+}
+
+<a asp-page="./Index" class="btn btn-outline-secondary mb-3">Back to my products</a>
+
+<h1>@ViewData["Title"]</h1>
+
+<form method="post" enctype="multipart/form-data" class="product-form">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <div class="mb-3">
+        <label asp-for="Input.Name" class="form-label"></label>
+        <input asp-for="Input.Name" class="form-control" maxlength="150" />
+        <span asp-validation-for="Input.Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.Description" class="form-label"></label>
+        <textarea asp-for="Input.Description" class="form-control" rows="6" maxlength="2000"
+                  aria-describedby="product-description-help"></textarea>
+        <div id="product-description-help" class="form-text">Materials, sizes, what's included: whatever a buyer would want to know.</div>
+        <span asp-validation-for="Input.Description" class="text-danger"></span>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+            <label asp-for="Input.Price" class="form-label"></label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input asp-for="Input.Price" class="form-control" type="number" min="0.01" max="100000" step="0.01" asp-format="{0:0.00}" />
+            </div>
+            <span asp-validation-for="Input.Price" class="text-danger"></span>
+        </div>
+        <div class="col-sm-6">
+            <label asp-for="Input.QuantityInStock" class="form-label"></label>
+            <input asp-for="Input.QuantityInStock" class="form-control" type="number" min="0" max="100000" step="1" />
+            <span asp-validation-for="Input.QuantityInStock" class="text-danger"></span>
+        </div>
+    </div>
+
+    <fieldset class="mb-3">
+        <legend class="h6">Photo</legend>
+
+        @if (Model.CurrentImageId is int currentImageId)
+        {
+            <div class="listing-image-current mb-3">
+                <img src="/images/product/@currentImageId" alt="Current product photo" />
+                <div class="form-check mt-2">
+                    <input type="checkbox" class="form-check-input" id="RemoveImage" name="RemoveImage" value="true" />
+                    <label class="form-check-label" for="RemoveImage">Remove the current photo</label>
+                </div>
+            </div>
+        }
+
+        <label asp-for="Input.Image" class="form-label">
+            @(Model.CurrentImageId is null ? "Photo (optional)" : "Replace with a new photo (optional)")
+        </label>
+        <input asp-for="Input.Image" type="file" class="form-control" accept="@EventImageService.AcceptAttribute"
+               aria-describedby="product-image-help" />
+        <div id="product-image-help" class="form-text">
+            JPEG, PNG or WebP, up to @(EventImageService.MaxBytes / (1024 * 1024)) MB. A square photo works best.
+        </div>
+        <span asp-validation-for="Input.Image" class="text-danger"></span>
+    </fieldset>
+
+    <div class="form-check mb-4">
+        <input asp-for="Input.IsListed" class="form-check-input" />
+        <label asp-for="Input.IsListed" class="form-check-label"></label>
+        <div class="form-text">Untick to keep it as a draft that only you can see.</div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">@(Model.IsNew ? "Add product" : "Save changes")</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

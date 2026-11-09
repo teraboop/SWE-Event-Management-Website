@@ -780,6 +780,67 @@ namespace EventManagement.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Vendors.VendorProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset?>("ArchivedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int?>("ImageId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsListed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("QuantityInStock")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("VendorProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageId");
+
+                    b.HasIndex("VendorProfileId", "ArchivedAt");
+
+                    b.HasIndex("IsListed", "ArchivedAt", "CreatedAt");
+
+                    b.ToTable("VendorProducts", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_VendorProducts_Price_Positive", "[Price] > 0");
+
+                            t.HasCheckConstraint("CK_VendorProducts_QuantityInStock_NonNegative", "[QuantityInStock] >= 0");
+                        });
+                });
+
             modelBuilder.Entity("EventManagement.Models.Vendors.VendorProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -1199,6 +1260,24 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("VendorProfile");
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Vendors.VendorProduct", b =>
+                {
+                    b.HasOne("EventManagement.Models.Events.EventImage", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("EventManagement.Models.Vendors.VendorProfile", "VendorProfile")
+                        .WithMany("Products")
+                        .HasForeignKey("VendorProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Image");
+
+                    b.Navigation("VendorProfile");
+                });
+
             modelBuilder.Entity("EventManagement.Models.Vendors.VendorProfile", b =>
                 {
                     b.HasOne("EventManagement.Data.ApplicationUser", "Owner")
@@ -1313,6 +1392,8 @@ namespace EventManagement.Data.Migrations
             modelBuilder.Entity("EventManagement.Models.Vendors.VendorProfile", b =>
                 {
                     b.Navigation("Applications");
+
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

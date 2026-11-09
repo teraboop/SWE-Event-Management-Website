@@ -1343,3 +1343,129 @@ body {
   outline-offset: 2px;
   border-radius: 0.25rem;
 }
+
+/* Marketplace: product cards, product page, storefront and vendor lists. */
+.product-card {
+  overflow: hidden;
+  border-color: var(--border);
+  border-radius: var(--radius);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.product-card:hover,
+.product-card:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1.25rem rgba(31, 41, 55, 0.08);
+}
+
+.product-card .card-title a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.product-card .card-title a:hover,
+.product-card .card-title a:focus {
+  color: var(--brand);
+}
+
+.product-card-image,
+.product-details-image {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background-color: var(--surface-alt);
+}
+
+.product-card-image img,
+.product-details-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-details-image {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* A letter in place of a missing photo. */
+.product-card-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--brand);
+  background-color: var(--brand-soft);
+}
+
+.product-stock-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.15rem 0.55rem;
+  color: #fff;
+  background-color: rgba(31, 41, 55, 0.85);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.product-card-price {
+  font-weight: 600;
+}
+
+.product-details-price {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.product-thumb {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  object-fit: cover;
+  border-radius: 0.4rem;
+  font-size: 1.1rem;
+}
+
+.product-form {
+  max-width: 44rem;
+}
+
+.storefront-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-alt);
+}
+
+.storefront-header > div:first-child {
+  flex: 1 1 24rem;
+}
+
+.event-vendors {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.event-vendor {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
