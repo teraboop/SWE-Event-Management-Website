@@ -78,7 +78,9 @@ body {
   letter-spacing: -0.012em;
 }
 
-.site-content > form:not(.hero-search):not(.events-filter-form),
+/* :not(.d-inline) keeps small inline action forms (like the event page's
+   Save button) from getting card padding, which made them overlap text. */
+.site-content > form:not(.hero-search):not(.events-filter-form):not(.d-inline),
 .site-content > .row > [class*="col-"] > form,
 .product-form,
 .announcement-form {
@@ -1971,4 +1973,226 @@ code {
   border-top: 1px solid var(--border);
   font-size: 1.2rem;
   font-weight: 700;
+}
+
+/* Event page actions (Save event) sit on their own row above the details. */
+.event-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 1rem;
+}
+
+/* AI recommendations (#12) */
+.recommendations-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  color: var(--muted);
+  background-color: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+.recommendation-reason {
+  margin-bottom: 0.4rem;
+  color: #6d28d9;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.recommendation-reason::before {
+  content: "\2726  ";
+}
+
+.recommended-vendor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  height: 100%;
+  padding: 0.85rem 1rem;
+  color: var(--ink);
+  text-decoration: none;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.recommended-vendor:hover,
+.recommended-vendor:focus {
+  color: var(--ink);
+  border-color: #a5b4fc;
+  box-shadow: 0 0.5rem 1.25rem rgba(31, 41, 55, 0.08);
+}
+
+/* AI assistant chat (#11) */
+.assistant-toggle {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1040;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.1rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand), var(--accent));
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 0.6rem 1.5rem rgba(67, 56, 202, 0.35);
+  font-weight: 700;
+}
+
+.assistant-toggle:hover,
+.assistant-toggle:focus-visible {
+  filter: brightness(1.08);
+}
+
+.assistant-panel {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1045;
+  display: flex;
+  flex-direction: column;
+  width: min(24rem, calc(100vw - 2rem));
+  height: min(34rem, calc(100vh - 2.5rem));
+  overflow: hidden;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 0.25rem);
+  box-shadow: 0 1rem 3rem rgba(31, 41, 55, 0.25);
+}
+
+.assistant-panel[hidden] {
+  display: none;
+}
+
+.assistant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand), var(--accent));
+}
+
+.assistant-header-button {
+  --bs-btn-color: #fff;
+  --bs-btn-border-color: rgba(255, 255, 255, 0.5);
+  --bs-btn-hover-color: var(--brand);
+  --bs-btn-hover-bg: #fff;
+  --bs-btn-hover-border-color: #fff;
+}
+
+.assistant-messages {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  overflow-y: auto;
+  background-color: var(--surface-alt);
+}
+
+.assistant-message {
+  max-width: 88%;
+  padding: 0.6rem 0.85rem;
+  border-radius: 1rem;
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.assistant-message-bot {
+  align-self: flex-start;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 0.3rem;
+}
+
+.assistant-message-user {
+  align-self: flex-end;
+  color: #fff;
+  background-color: var(--brand);
+  border-bottom-right-radius: 0.3rem;
+}
+
+.assistant-message-thinking {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.assistant-links {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  white-space: normal;
+}
+
+.assistant-link {
+  display: flex;
+  flex-direction: column;
+  padding: 0.45rem 0.65rem;
+  color: var(--ink);
+  text-decoration: none;
+  background-color: var(--brand-soft);
+  border-radius: 0.6rem;
+}
+
+.assistant-link:hover,
+.assistant-link:focus {
+  color: var(--brand);
+  outline: 2px solid #a5b4fc;
+}
+
+.assistant-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.assistant-suggestions[hidden] {
+  display: none;
+}
+
+.assistant-suggestion {
+  padding: 0.35rem 0.75rem;
+  color: var(--brand);
+  background-color: var(--surface);
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.assistant-suggestion:hover,
+.assistant-suggestion:focus-visible {
+  color: #fff;
+  background-color: var(--brand);
+}
+
+.assistant-form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.assistant-disclaimer {
+  margin: 0;
+  padding: 0 0.75rem 0.6rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+@media (max-width: 575.98px) {
+  .assistant-panel {
+    right: 0.5rem;
+    bottom: 0.5rem;
+    width: calc(100vw - 1rem);
+    height: calc(100vh - 1rem);
+  }
 }

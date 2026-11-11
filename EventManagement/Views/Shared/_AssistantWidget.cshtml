@@ -1,0 +1,40 @@
+@* The AI assistant chat (#11): a button fixed to the corner of every page that opens a chat panel. Driven by wwwroot/js/assistant.js. *@
+<div class="assistant" id="assistant">
+    @Html.AntiForgeryToken()
+
+    <button type="button" class="assistant-toggle" id="assistant-toggle"
+            aria-expanded="false" aria-controls="assistant-panel">
+        <span aria-hidden="true">✦</span> Ask AI
+    </button>
+
+    <section class="assistant-panel" id="assistant-panel" role="dialog" aria-labelledby="assistant-title" hidden>
+        <header class="assistant-header">
+            <div>
+                <h2 id="assistant-title" class="h6 mb-0">Nostalgia assistant</h2>
+                <span class="small">Ask about events, tickets, the shop or rewards</span>
+            </div>
+            <div class="d-flex gap-1">
+                <button type="button" class="btn btn-sm assistant-header-button" id="assistant-clear" title="Start a new conversation">New chat</button>
+                <button type="button" class="btn-close btn-close-white" id="assistant-close" aria-label="Close the assistant"></button>
+            </div>
+        </header>
+
+        <div class="assistant-messages" id="assistant-messages" aria-live="polite">
+            <div class="assistant-message assistant-message-bot">
+                Hi! I can help you find events, explain tickets and rewards, or point you to vendors. What are you looking for?
+            </div>
+            <div class="assistant-suggestions" id="assistant-suggestions">
+                <button type="button" class="assistant-suggestion">What's happening this weekend?</button>
+                <button type="button" class="assistant-suggestion">Any free events coming up?</button>
+                <button type="button" class="assistant-suggestion">How do reward points work?</button>
+            </div>
+        </div>
+
+        <form class="assistant-form" id="assistant-form" autocomplete="off">
+            <label for="assistant-input" class="visually-hidden">Your question</label>
+            <input id="assistant-input" class="form-control" maxlength="500" placeholder="Ask a question..." required />
+            <button type="submit" class="btn btn-primary" id="assistant-send">Send</button>
+        </form>
+        <p class="assistant-disclaimer">AI answers can be wrong. Check the event page before you buy.</p>
+    </section>
+</div>

@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@inject Microsoft.Extensions.Options.IOptions<EventManagement.Services.Ai.GeminiOptions> GeminiOptions
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -53,6 +54,11 @@
         </div>
     </main>
 
+    @if (GeminiOptions.Value.IsConfigured)
+    {
+        <partial name="_AssistantWidget" />
+    }
+
     <footer class="site-footer border-top py-4">
         <div class="container d-flex flex-column flex-sm-row justify-content-between gap-2">
             <span>&copy; 2026 Nostalgia Events · Built by Team Nostalgia</span>
@@ -62,6 +68,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/assistant.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
