@@ -4,14 +4,22 @@ using EventManagement.Models.Panels;
 using EventManagement.Models.Profile;
 using EventManagement.Models.Reviews;
 using EventManagement.Models.Vendors;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventManagement.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    : IdentityDbContext<ApplicationUser>(options)
+    : IdentityDbContext<ApplicationUser>(options), IDataProtectionKeyContext
 {
+    /// <summary>
+    /// The keys that encrypt sign-in cookies and anti-forgery tokens. Kept in
+    /// the database so every copy of the app shares them, and hosts that wipe
+    /// local files on restart (like Render) don't sign everyone out.
+    /// </summary>
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     public DbSet<InterestCategory> InterestCategories => Set<InterestCategory>();
 
     public DbSet<UserInterest> UserInterests => Set<UserInterest>();

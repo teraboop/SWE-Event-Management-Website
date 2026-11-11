@@ -1,10 +1,27 @@
+using System.Globalization;
 using EventManagement.Data;
 using EventManagement.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+// Prices, dates and number inputs use US formatting everywhere. Without
+// this, a Linux host with no locale set (like the Render container) would
+// show prices as "¤10.00".
+var appCulture = CultureInfo.GetCultureInfo("en-US");
+CultureInfo.DefaultThreadCurrentCulture = appCulture;
+CultureInfo.DefaultThreadCurrentUICulture = appCulture;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Hosts like Render tell the app which port to listen on through PORT.
+// Locally it isn't set, so launchSettings.json applies as before.
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
@@ -26,6 +43,11 @@ builder.Services.AddScoped<EventAnnouncementService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<CheckoutService>();
 builder.Services.TryAddSingleton(TimeProvider.System);
+
+// Store the sign-in encryption keys in the database (see ApplicationDbContext.DataProtectionKeys).
+builder.Services.AddDataProtection()
+    .SetApplicationName("EventManagement")
+    .PersistKeysToDbContext<ApplicationDbContext>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
