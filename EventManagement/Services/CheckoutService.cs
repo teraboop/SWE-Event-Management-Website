@@ -18,6 +18,7 @@ public class CheckoutService
     private readonly CartService _cartService;
     private readonly TicketPurchaseService _ticketPurchaseService;
     private readonly VendorProductService _productService;
+    private readonly RewardService _rewardService;
     private readonly TimeProvider _timeProvider;
 
     public CheckoutService(
@@ -25,8 +26,10 @@ public class CheckoutService
         CartService cartService,
         TicketPurchaseService ticketPurchaseService,
         VendorProductService productService,
+        RewardService rewardService,
         TimeProvider timeProvider)
     {
+        _rewardService = rewardService;
         _dbContext = dbContext;
         _cartService = cartService;
         _ticketPurchaseService = ticketPurchaseService;
@@ -36,14 +39,23 @@ public class CheckoutService
 
     /// <summary>
     /// Places the order. <paramref name="expectedTotal"/> is the total the
-    /// buyer saw on the checkout page; if prices changed since, the order is
-    /// refused so nobody pays an amount they didn't agree to.
+    /// buyer saw on the checkout page, before any rewards discount; if prices
+    /// changed since, the order is refused so nobody pays an amount they
+    /// didn't agree to. <paramref name="pointsToRedeem"/> is spent for a
+    /// discount (whole redemptions only); the order then earns points on
+    /// what's left to pay.
     /// </summary>
     public async Task<CheckoutResult> PlaceOrderAsync(
         string userId,
         decimal expectedTotal,
+        int pointsToRedeem = 0,
         CancellationToken cancellationToken = default)
     {
+        if (pointsToRedeem < 0 || pointsToRedeem % RewardService.PointsPerRedemption != 0)
+        {
+            return Fail($"Points can only be used in blocks of {RewardService.PointsPerRedemption}.");
+        }
+
         var cart = await _cartService.GetCartAsync(userId, cancellationToken);
 
         if (cart.IsEmpty)
@@ -147,9 +159,34 @@ public class CheckoutService
             return Fail("Prices in your cart have changed. Check the new total, then place your order again.");
         }
 
+        var discount = RewardService.DiscountFor(pointsToRedeem);
+        if (discount > order.TotalAmount)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            _dbContext.ChangeTracker.Clear();
+            return Fail("That's more points than this order needs. Choose fewer points.");
+        }
+
+        order.RewardDiscount = discount;
+        order.PointsRedeemed = pointsToRedeem;
+        order.TotalAmount -= discount;
+        order.PointsEarned = RewardService.PointsForPurchase(order.TotalAmount);
+
         _dbContext.Orders.Add(order);
         _dbContext.CartItems.RemoveRange(lines);
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // Points move inside the same transaction as the order: if the
+        // balance no longer covers the redemption, the whole order is undone.
+        if (pointsToRedeem > 0 &&
+            !await _rewardService.TrySpendForOrderAsync(userId, pointsToRedeem, order.Id, cancellationToken))
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            _dbContext.ChangeTracker.Clear();
+            return Fail("You don't have enough reward points for that discount any more. Nothing was charged.");
+        }
+
+        await _rewardService.EarnForOrderAsync(userId, order.PointsEarned, order.Id, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return new CheckoutResult(true, $"Order #{order.Id} placed.", order.Id);

@@ -58,6 +58,9 @@ public class OrdersController : Controller
                 Status = item.Status,
                 PlacedAt = item.CompletedAt ?? item.CreatedAt,
                 TotalAmount = item.TotalAmount,
+                RewardDiscount = item.RewardDiscount,
+                PointsRedeemed = item.PointsRedeemed,
+                PointsEarned = item.PointsEarned,
                 ItemLines = item.Items
                     .OrderBy(line => line.Id)
                     .Select(line => new OrderItemLineViewModel

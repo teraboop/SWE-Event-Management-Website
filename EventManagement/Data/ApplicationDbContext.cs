@@ -3,6 +3,7 @@ using EventManagement.Models.Events;
 using EventManagement.Models.Panels;
 using EventManagement.Models.Profile;
 using EventManagement.Models.Reviews;
+using EventManagement.Models.Rewards;
 using EventManagement.Models.Vendors;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -59,6 +60,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CartItem> CartItems => Set<CartItem>();
 
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+
+    public DbSet<RewardAccount> RewardAccounts => Set<RewardAccount>();
+
+    public DbSet<RewardTransaction> RewardTransactions => Set<RewardTransaction>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -279,7 +284,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 table.HasCheckConstraint(
                     "CK_Orders_TotalAmount_NonNegative",
                     "[TotalAmount] >= 0");
+
+                table.HasCheckConstraint(
+                    "CK_Orders_Rewards_NonNegative",
+                    "[RewardDiscount] >= 0 AND [PointsRedeemed] >= 0 AND [PointsEarned] >= 0");
             });
+
+            entity.Property(order => order.RewardDiscount)
+                .HasPrecision(10, 2)
+                .HasDefaultValue(0m);
+
+            entity.Property(order => order.PointsRedeemed).HasDefaultValue(0);
+            entity.Property(order => order.PointsEarned).HasDefaultValue(0);
 
             entity.Property(order => order.UserId)
                 .IsRequired();
@@ -679,6 +695,53 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany()
                 .HasForeignKey(item => item.VendorProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<RewardAccount>(entity =>
+        {
+            entity.ToTable("RewardAccounts", table =>
+            {
+                // Spending uses a conditional UPDATE; this is the database's
+                // own guarantee that no write leaves a negative balance.
+                table.HasCheckConstraint(
+                    "CK_RewardAccounts_Points",
+                    "[Points] >= 0 AND [LifetimePoints] >= [Points]");
+            });
+
+            entity.HasKey(account => account.UserId);
+
+            entity.HasOne(account => account.User)
+                .WithOne()
+                .HasForeignKey<RewardAccount>(account => account.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<RewardTransaction>(entity =>
+        {
+            entity.ToTable("RewardTransactions", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_RewardTransactions_Points_NonZero",
+                    "[Points] <> 0");
+            });
+
+            entity.Property(transaction => transaction.Kind).HasConversion<int>();
+            entity.Property(transaction => transaction.Description).HasMaxLength(200).IsRequired();
+
+            // The history page, newest first.
+            entity.HasIndex(transaction => new { transaction.UserId, transaction.CreatedAt });
+
+            // Review points are earned once per event, even if the review is
+            // deleted and written again.
+            entity.HasIndex(transaction => new { transaction.UserId, transaction.EventId })
+                .IsUnique()
+                .HasFilter("[Kind] = 1")
+                .HasDatabaseName("IX_RewardTransactions_OneReviewAwardPerEvent");
+
+            entity.HasOne(transaction => transaction.User)
+                .WithMany()
+                .HasForeignKey(transaction => transaction.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<OrderItem>(entity =>

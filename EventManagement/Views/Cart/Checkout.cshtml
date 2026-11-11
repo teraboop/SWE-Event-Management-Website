@@ -1,8 +1,10 @@
-@model EventManagement.ViewModels.Cart.CartViewModel
+@model EventManagement.ViewModels.Rewards.CheckoutViewModel
 @using System.Globalization
+@using EventManagement.Services
 
 @{
     ViewData["Title"] = "Checkout";
+    var cart = Model.Cart;
 }
 
 <a asp-action="Index" class="btn btn-outline-secondary mb-3">Back to cart</a>
@@ -14,7 +16,7 @@
         <section aria-labelledby="checkout-items-heading">
             <h2 id="checkout-items-heading" class="h5">Review your order</h2>
             <ul class="cart-lines list-unstyled">
-                @foreach (var line in Model.Lines)
+                @foreach (var line in cart.Lines)
                 {
                     <partial name="_CartLine" model="line" />
                 }
@@ -34,14 +36,51 @@
 
             <dl class="cart-summary-rows">
                 <dt>Items</dt>
-                <dd>@Model.ItemCount</dd>
+                <dd>@cart.ItemCount</dd>
                 <dt class="cart-summary-total">Total</dt>
-                <dd class="cart-summary-total">@Model.Total.ToString("C")</dd>
+                <dd class="cart-summary-total">@cart.Total.ToString("C")</dd>
             </dl>
 
             <form asp-action="PlaceOrder" method="post">
                 @* The total you saw. If a price changes before the order goes through, it's refused rather than charging a different amount. *@
-                <input type="hidden" name="expectedTotal" value="@Model.Total.ToString("0.00", CultureInfo.InvariantCulture)" />
+                <input type="hidden" name="expectedTotal" value="@cart.Total.ToString("0.00", CultureInfo.InvariantCulture)" />
+
+                @if (Model.MaxRedeemablePoints > 0)
+                {
+                    <div class="checkout-rewards mb-3">
+                        <label for="points-to-redeem" class="form-label fw-semibold">
+                            Use reward points
+                            <span class="fw-normal text-muted small">(you have @Model.PointsBalance)</span>
+                        </label>
+                        @* Each option states what you'd pay, so the page needs no script to show the new total. *@
+                        <select id="points-to-redeem" name="pointsToRedeem" class="form-select">
+                            <option value="0">Don't use points (pay @cart.Total.ToString("C"))</option>
+                            @for (var points = RewardService.PointsPerRedemption; points <= Model.MaxRedeemablePoints; points += RewardService.PointsPerRedemption)
+                            {
+                                var discount = RewardService.DiscountFor(points);
+                                <option value="@points">@points points: &minus;@discount.ToString("C") (pay @((cart.Total - discount).ToString("C")))</option>
+                            }
+                        </select>
+                        <div class="form-text">
+                            Every @RewardService.PointsPerRedemption points take @RewardService.RedemptionValue.ToString("C") off.
+                        </div>
+                    </div>
+                }
+                else if (Model.PointsBalance > 0)
+                {
+                    <p class="small text-muted">
+                        You have @Model.PointsBalance reward points. You can use them once you have
+                        @RewardService.PointsPerRedemption (worth @RewardService.RedemptionValue.ToString("C")).
+                    </p>
+                }
+
+                @if (cart.Total >= 1)
+                {
+                    <p class="small">
+                        You'll earn <span class="rewards-earned">@RewardService.PointsPerDollar point per $1</span> you pay.
+                    </p>
+                }
+
                 <button type="submit" class="btn btn-primary w-100">Place order</button>
             </form>
         </aside>

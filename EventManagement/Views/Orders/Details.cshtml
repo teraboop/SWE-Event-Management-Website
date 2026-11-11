@@ -82,7 +82,25 @@
     </section>
 }
 
-<p class="order-total">Total <strong>@Model.TotalAmount.ToString("C")</strong></p>
+<dl class="order-totals">
+    @if (Model.RewardDiscount > 0)
+    {
+        <dt>Subtotal</dt>
+        <dd>@Model.Subtotal.ToString("C")</dd>
+        <dt>Rewards (@Model.PointsRedeemed points)</dt>
+        <dd>&minus;@Model.RewardDiscount.ToString("C")</dd>
+    }
+    <dt class="order-totals-total">Total paid</dt>
+    <dd class="order-totals-total">@Model.TotalAmount.ToString("C")</dd>
+</dl>
+
+@if (Model.PointsEarned > 0)
+{
+    <p class="text-end">
+        <span class="rewards-earned">+@Model.PointsEarned reward points</span>
+        <a asp-controller="Rewards" asp-action="Index" class="small ms-2">My rewards</a>
+    </p>
+}
 
 <p class="small text-muted">
     This was a demo checkout: no payment was taken and merchandise won't be shipped.

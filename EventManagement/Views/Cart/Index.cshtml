@@ -1,4 +1,5 @@
 @model EventManagement.ViewModels.Cart.CartViewModel
+@using EventManagement.Services
 
 @{
     ViewData["Title"] = "Your cart";
@@ -73,6 +74,14 @@ else
                     <dt class="cart-summary-total">Total</dt>
                     <dd class="cart-summary-total">@Model.Total.ToString("C")</dd>
                 </dl>
+
+                @if (Model.Total >= 1)
+                {
+                    <p class="small mb-3">
+                        <span class="rewards-earned">Earn about @RewardService.PointsForPurchase(Model.Total) points</span>
+                        with this order.
+                    </p>
+                }
 
                 @if (Model.CanCheckout)
                 {

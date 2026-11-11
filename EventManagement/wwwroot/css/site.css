@@ -1886,3 +1886,89 @@ code {
   font-size: 1.25rem;
   text-align: right;
 }
+
+/* Rewards: My rewards page, checkout and receipts. */
+.rewards-balance,
+.rewards-tier {
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.rewards-balance {
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand), var(--accent));
+  border: 0;
+}
+
+.rewards-balance-points {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.rewards-tier-name {
+  display: inline-block;
+  padding: 0.2rem 0.85rem;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.rewards-tier-bronze {
+  color: #7c2d12;
+  background-color: #fed7aa;
+}
+
+.rewards-tier-silver {
+  color: #334155;
+  background-color: #e2e8f0;
+}
+
+.rewards-tier-gold {
+  color: #713f12;
+  background-color: #fde68a;
+}
+
+.rewards-progress {
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background-color: var(--border);
+}
+
+.rewards-progress > span {
+  display: block;
+  height: 100%;
+  background-color: var(--brand);
+}
+
+.rewards-earned {
+  font-weight: 600;
+  color: #047857;
+}
+
+.checkout-rewards {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.order-totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 1.5rem;
+  max-width: 22rem;
+  margin-left: auto;
+}
+
+.order-totals dd {
+  margin: 0;
+  text-align: right;
+}
+
+.order-totals-total {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 1.2rem;
+  font-weight: 700;
+}

@@ -2,7 +2,7 @@
 	Demo seed data for presentations. Development databases only.
 
 	Prerequisites:
-	- The database is migrated up to AddCartAndOrderItems.
+	- The database is migrated up to the rewards program migration.
 	- The application has run once, so SeedData created the roles and the
 	  event and interest categories.
 	- organizer@test.com and vendor@test.com are registered.
@@ -29,6 +29,9 @@
 	   events, and pending vendor, panel and event applications.
 	7. A vendor profile for vendor@test.com, approved for online sales, with
 	   30 products and some merchandise orders.
+	8. Reward points for every seeded order and review, and one example of
+	   points being spent (alex.demo's merchandise order). The two test
+	   accounts' points history is reset to match the seeded data.
 
 	Dates are relative to when the script runs, so re-run it before a demo
 	to keep "upcoming" events upcoming. Event times are Central (UTC-6).
@@ -134,6 +137,10 @@ BEGIN TRY
 	DELETE FROM dbo.AspNetUsers
 	WHERE NormalizedEmail LIKE '%.DEMO@TEST.COM';
 
+	-- The test accounts' points are rebuilt from the seeded orders and reviews below.
+	DELETE FROM dbo.RewardTransactions WHERE UserId IN (@OrganizerId, @VendorId);
+	DELETE FROM dbo.RewardAccounts WHERE UserId IN (@OrganizerId, @VendorId);
+
 	-- Earlier seed events and what hangs off them.
 	DECLARE @OldEvents TABLE (Id int NOT NULL PRIMARY KEY, BackgroundImageId int NULL);
 
@@ -199,10 +206,11 @@ BEGIN TRY
 	  AND NOT EXISTS (SELECT 1 FROM dbo.OrderItems WHERE OrderId = orderRecord.Id);
 
 	UPDATE orderRecord
-	SET TotalAmount =
-		ISNULL((SELECT SUM(UnitPrice) FROM dbo.Tickets WHERE OrderId = orderRecord.Id), 0) +
-		ISNULL((SELECT SUM(UnitPrice * Quantity) FROM dbo.OrderItems WHERE OrderId = orderRecord.Id), 0)
+	SET TotalAmount = CASE WHEN lines.Total > orderRecord.RewardDiscount THEN lines.Total - orderRecord.RewardDiscount ELSE 0 END
 	FROM dbo.Orders AS orderRecord
+	CROSS APPLY (SELECT
+		ISNULL((SELECT SUM(UnitPrice) FROM dbo.Tickets WHERE OrderId = orderRecord.Id), 0) +
+		ISNULL((SELECT SUM(UnitPrice * Quantity) FROM dbo.OrderItems WHERE OrderId = orderRecord.Id), 0) AS Total) AS lines
 	WHERE orderRecord.Id IN (SELECT OrderId FROM @AffectedOrders);
 
 	/* --------------------------------------------------------------------
@@ -794,6 +802,56 @@ Morgan C. - librarian', 60, 1),
 	INNER JOIN dbo.VendorProfiles AS profile ON profile.Id = product.VendorProfileId;
 
 	/* --------------------------------------------------------------------
+	   8. Reward points (same rules as RewardService: 1 point per whole
+	   dollar paid, 25 per review, 100 points = $5 off)
+	   -------------------------------------------------------------------- */
+
+	-- alex.demo spent 100 points for $5 off their merchandise order.
+	UPDATE orderRecord
+	SET RewardDiscount = 5, PointsRedeemed = 100, TotalAmount = orderRecord.TotalAmount - 5
+	FROM dbo.Orders AS orderRecord
+	INNER JOIN @MerchOrders AS merchOrder ON merchOrder.OrderId = orderRecord.Id
+	WHERE merchOrder.BuyerIdx = 1;
+
+	DECLARE @SeededOrders TABLE (OrderId int NOT NULL PRIMARY KEY);
+
+	INSERT INTO @SeededOrders (OrderId)
+	SELECT OrderId FROM @TicketOrders
+	UNION
+	SELECT OrderId FROM @MerchOrders;
+
+	UPDATE orderRecord
+	SET PointsEarned = CAST(FLOOR(orderRecord.TotalAmount) AS int)
+	FROM dbo.Orders AS orderRecord
+	INNER JOIN @SeededOrders AS seeded ON seeded.OrderId = orderRecord.Id;
+
+	INSERT INTO dbo.RewardTransactions (UserId, Points, Kind, Description, OrderId, EventId, CreatedAt)
+	SELECT orderRecord.UserId, orderRecord.PointsEarned, 0, CONCAT('Order #', orderRecord.Id), orderRecord.Id, NULL, orderRecord.CreatedAt
+	FROM dbo.Orders AS orderRecord
+	INNER JOIN @SeededOrders AS seeded ON seeded.OrderId = orderRecord.Id
+	WHERE orderRecord.PointsEarned > 0
+	UNION ALL
+	SELECT orderRecord.UserId, -orderRecord.PointsRedeemed, 2,
+		CONCAT('Used $', CONVERT(varchar(20), CAST(orderRecord.RewardDiscount AS decimal(10, 2))), ' off order #', orderRecord.Id),
+		orderRecord.Id, NULL, orderRecord.CreatedAt
+	FROM dbo.Orders AS orderRecord
+	INNER JOIN @SeededOrders AS seeded ON seeded.OrderId = orderRecord.Id
+	WHERE orderRecord.PointsRedeemed > 0
+	UNION ALL
+	SELECT review.AuthorUserId, 25, 1, CONCAT('Reviewed ', seedEvent.Title), NULL, review.EventId, review.CreatedAt
+	FROM dbo.EventReviews AS review
+	INNER JOIN @SeedEvents AS seedEvent ON seedEvent.EventId = review.EventId;
+
+	INSERT INTO dbo.RewardAccounts (UserId, Points, LifetimePoints)
+	SELECT
+		UserId,
+		SUM(Points),
+		SUM(CASE WHEN Points > 0 THEN Points ELSE 0 END)
+	FROM dbo.RewardTransactions
+	WHERE UserId IN (SELECT UserId FROM @Buyers)
+	GROUP BY UserId;
+
+	/* --------------------------------------------------------------------
 	   6c. Pending applications for the review queues
 	   -------------------------------------------------------------------- */
 
@@ -921,3 +979,9 @@ SELECT
 	(SELECT COUNT(*) FROM dbo.VendorProducts AS p INNER JOIN dbo.VendorProfiles AS v ON v.Id = p.VendorProfileId
 	 INNER JOIN dbo.AspNetUsers AS u ON u.Id = v.OwnerUserId WHERE u.NormalizedEmail = 'VENDOR@TEST.COM' AND p.ArchivedAt IS NULL) AS VendorProducts,
 	(SELECT COUNT(*) FROM dbo.AspNetUsers WHERE NormalizedEmail LIKE '%.DEMO@TEST.COM') AS DemoAttendees;
+
+SELECT account.Email, rewards.Points, rewards.LifetimePoints
+FROM dbo.RewardAccounts AS rewards
+INNER JOIN dbo.AspNetUsers AS account ON account.Id = rewards.UserId
+WHERE account.NormalizedEmail LIKE '%@TEST.COM'
+ORDER BY account.Email;

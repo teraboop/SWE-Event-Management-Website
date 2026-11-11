@@ -41,13 +41,16 @@ public class EventReviewService
 
     private readonly ApplicationDbContext _dbContext;
     private readonly TicketPurchaseService _ticketPurchaseService;
+    private readonly RewardService _rewardService;
     private readonly TimeProvider _timeProvider;
 
     public EventReviewService(
         ApplicationDbContext dbContext,
         TicketPurchaseService ticketPurchaseService,
+        RewardService rewardService,
         TimeProvider timeProvider)
     {
+        _rewardService = rewardService;
         _dbContext = dbContext;
         _ticketPurchaseService = ticketPurchaseService;
         _timeProvider = timeProvider;
@@ -183,7 +186,19 @@ public class EventReviewService
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        return new EventReviewResult(true, "Thanks for reviewing this event.", eventId);
+        var eventTitle = await _dbContext.Events
+            .Where(@event => @event.Id == eventId)
+            .Select(@event => @event.Title)
+            .SingleAsync(cancellationToken);
+
+        var pointsEarned = await _rewardService.AwardForReviewAsync(userId, eventId, eventTitle, cancellationToken);
+
+        return new EventReviewResult(
+            true,
+            pointsEarned > 0
+                ? $"Thanks for reviewing this event! You earned {pointsEarned} reward points."
+                : "Thanks for reviewing this event.",
+            eventId);
     }
 
     /// <summary>Authors can delete their own review; admins can remove any review.</summary>
