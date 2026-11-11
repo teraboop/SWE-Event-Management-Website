@@ -22,9 +22,14 @@ public class EventAnnouncementService
 
     private readonly ApplicationDbContext _dbContext;
     private readonly TimeProvider _timeProvider;
+    private readonly EmailNotificationService _notifications;
 
-    public EventAnnouncementService(ApplicationDbContext dbContext, TimeProvider timeProvider)
+    public EventAnnouncementService(
+        ApplicationDbContext dbContext,
+        TimeProvider timeProvider,
+        EmailNotificationService notifications)
     {
+        _notifications = notifications;
         _dbContext = dbContext;
         _timeProvider = timeProvider;
     }
@@ -52,7 +57,7 @@ public class EventAnnouncementService
             return Fail("Only this event's organizer can post announcements.");
         }
 
-        _dbContext.EventAnnouncements.Add(new EventAnnouncement
+        var announcement = new EventAnnouncement
         {
             EventId = eventId,
             Title = input.Title.Trim(),
@@ -61,10 +66,14 @@ public class EventAnnouncementService
             PostedByUserId = userId,
             PostedByName = userName,
             CreatedAt = _timeProvider.GetUtcNow()
-        });
+        };
+        _dbContext.EventAnnouncements.Add(announcement);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return new EventAnnouncementResult(true, "Announcement posted.");
+
+        // Only new announcements are emailed; edits and pinning aren't.
+        await _notifications.AnnouncementPostedAsync(announcement.Id, cancellationToken);
+        return new EventAnnouncementResult(true, "Announcement posted. Ticket holders are being emailed.");
     }
 
     public async Task<EventAnnouncementResult> UpdateAsync(

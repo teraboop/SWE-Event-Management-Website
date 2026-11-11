@@ -20,6 +20,7 @@ public class CheckoutService
     private readonly VendorProductService _productService;
     private readonly RewardService _rewardService;
     private readonly TimeProvider _timeProvider;
+    private readonly EmailNotificationService _notifications;
 
     public CheckoutService(
         ApplicationDbContext dbContext,
@@ -27,8 +28,10 @@ public class CheckoutService
         TicketPurchaseService ticketPurchaseService,
         VendorProductService productService,
         RewardService rewardService,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        EmailNotificationService notifications)
     {
+        _notifications = notifications;
         _rewardService = rewardService;
         _dbContext = dbContext;
         _cartService = cartService;
@@ -189,6 +192,7 @@ public class CheckoutService
         await _rewardService.EarnForOrderAsync(userId, order.PointsEarned, order.Id, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
+        await _notifications.OrderPlacedAsync(order.Id, cancellationToken);
         return new CheckoutResult(true, $"Order #{order.Id} placed.", order.Id);
     }
 

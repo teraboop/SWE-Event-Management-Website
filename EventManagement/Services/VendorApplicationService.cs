@@ -30,9 +30,14 @@ public class VendorApplicationService
 
     private readonly ApplicationDbContext _dbContext;
     private readonly TimeProvider _timeProvider;
+    private readonly EmailNotificationService _notifications;
 
-    public VendorApplicationService(ApplicationDbContext dbContext, TimeProvider timeProvider)
+    public VendorApplicationService(
+        ApplicationDbContext dbContext,
+        TimeProvider timeProvider,
+        EmailNotificationService notifications)
     {
+        _notifications = notifications;
         _dbContext = dbContext;
         _timeProvider = timeProvider;
     }
@@ -129,6 +134,11 @@ public class VendorApplicationService
             return Fail("You already have a pending application for this.");
         }
 
+        if (application.Kind == VendorApplicationKind.Event)
+        {
+            await _notifications.VendorApplicationSubmittedAsync(application.Id, cancellationToken);
+        }
+
         return new VendorApplicationResult(true, "Application submitted.", application.Id);
     }
 
@@ -219,9 +229,13 @@ public class VendorApplicationService
                 .SetProperty(application => application.ReviewNote, note),
                 cancellationToken);
 
-        return updated == 1
-            ? new VendorApplicationResult(true, approve ? "Application approved." : "Application rejected.", applicationId)
-            : Fail("This application was already decided or withdrawn.");
+        if (updated != 1)
+        {
+            return Fail("This application was already decided or withdrawn.");
+        }
+
+        await _notifications.VendorApplicationDecidedAsync(applicationId, cancellationToken);
+        return new VendorApplicationResult(true, approve ? "Application approved." : "Application rejected.", applicationId);
     }
 
     /// <summary>Who may review: admins always; an event's organizer for that event's applications.</summary>

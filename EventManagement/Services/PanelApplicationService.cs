@@ -29,9 +29,14 @@ public class PanelApplicationService
 
     private readonly ApplicationDbContext _dbContext;
     private readonly TimeProvider _timeProvider;
+    private readonly EmailNotificationService _notifications;
 
-    public PanelApplicationService(ApplicationDbContext dbContext, TimeProvider timeProvider)
+    public PanelApplicationService(
+        ApplicationDbContext dbContext,
+        TimeProvider timeProvider,
+        EmailNotificationService notifications)
     {
+        _notifications = notifications;
         _dbContext = dbContext;
         _timeProvider = timeProvider;
     }
@@ -107,6 +112,7 @@ public class PanelApplicationService
             return Fail("You already have a pending proposal with this title for this event.");
         }
 
+        await _notifications.PanelApplicationSubmittedAsync(application.Id, cancellationToken);
         return new PanelApplicationResult(true, "Proposal submitted.", application.Id);
     }
 
@@ -190,9 +196,13 @@ public class PanelApplicationService
                 .SetProperty(application => application.ReviewNote, note),
                 cancellationToken);
 
-        return updated == 1
-            ? new PanelApplicationResult(true, approve ? "Proposal approved." : "Proposal rejected.", applicationId)
-            : Fail("This proposal was already decided or withdrawn.");
+        if (updated != 1)
+        {
+            return Fail("This proposal was already decided or withdrawn.");
+        }
+
+        await _notifications.PanelApplicationDecidedAsync(applicationId, cancellationToken);
+        return new PanelApplicationResult(true, approve ? "Proposal approved." : "Proposal rejected.", applicationId);
     }
 
     /// <summary>Who may review: admins always; otherwise only the event's organizer.</summary>
