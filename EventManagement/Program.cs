@@ -1,6 +1,7 @@
 using System.Globalization;
 using EventManagement.Data;
 using EventManagement.Services;
+using EventManagement.Services.Email;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -43,6 +44,18 @@ builder.Services.AddScoped<EventAnnouncementService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<CheckoutService>();
 builder.Services.AddScoped<RewardService>();
+
+// Email: services queue messages, and EmailDispatcher sends them in the
+// background through Brevo (or writes them to the log without a Brevo key).
+builder.Services.Configure<BrevoOptions>(builder.Configuration.GetSection("Brevo"));
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+builder.Services.AddSingleton<EmailQueue>();
+builder.Services.AddHostedService<EmailDispatcher>();
+builder.Services.AddHttpClient<BrevoEmailDelivery>(client => client.BaseAddress = new Uri("https://api.brevo.com/"));
+builder.Services.AddTransient<LogEmailDelivery>();
+builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, QueuedEmailSender>();
+builder.Services.AddScoped<EmailNotificationService>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.TryAddSingleton(TimeProvider.System);
 
 // Store the sign-in encryption keys in the database (see ApplicationDbContext.DataProtectionKeys).

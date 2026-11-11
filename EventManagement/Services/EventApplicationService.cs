@@ -32,13 +32,16 @@ public class EventApplicationService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly EventImageService _imageService;
     private readonly TimeProvider _timeProvider;
+    private readonly EmailNotificationService _notifications;
 
     public EventApplicationService(
         ApplicationDbContext dbContext,
         UserManager<ApplicationUser> userManager,
         EventImageService imageService,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        EmailNotificationService notifications)
     {
+        _notifications = notifications;
         _dbContext = dbContext;
         _userManager = userManager;
         _imageService = imageService;
@@ -223,9 +226,13 @@ public class EventApplicationService
                     .SetProperty(application => application.ReviewNote, note),
                     cancellationToken);
 
-            return rejected == 1
-                ? new EventApplicationResult(true, "Application rejected.", applicationId)
-                : Fail("This application was already decided or withdrawn.");
+            if (rejected != 1)
+            {
+                return Fail("This application was already decided or withdrawn.");
+            }
+
+            await _notifications.EventApplicationDecidedAsync(applicationId, cancellationToken);
+            return new EventApplicationResult(true, "Application rejected.", applicationId);
         }
 
         var source = await _dbContext.EventApplications
@@ -313,6 +320,8 @@ public class EventApplicationService
         }
 
         await transaction.CommitAsync(cancellationToken);
+
+        await _notifications.EventApplicationDecidedAsync(applicationId, cancellationToken);
 
         return new EventApplicationResult(
             true,
