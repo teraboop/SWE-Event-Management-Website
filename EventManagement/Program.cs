@@ -1,6 +1,7 @@
 using System.Globalization;
 using EventManagement.Data;
 using EventManagement.Services;
+using EventManagement.Services.Ai;
 using EventManagement.Services.Email;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -56,6 +57,15 @@ builder.Services.AddTransient<LogEmailDelivery>();
 builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, QueuedEmailSender>();
 builder.Services.AddScoped<EmailNotificationService>();
 builder.Services.AddHttpContextAccessor();
+
+// AI features (Gemini): the chat assistant and recommendations. Without a
+// Gemini:ApiKey the chat is hidden and recommendations use simple rules.
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<GeminiClient>(client => client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/"));
+builder.Services.AddSingleton<AiUsageLimiter>();
+builder.Services.AddScoped<AssistantService>();
+builder.Services.AddScoped<RecommendationService>();
 builder.Services.TryAddSingleton(TimeProvider.System);
 
 // Store the sign-in encryption keys in the database (see ApplicationDbContext.DataProtectionKeys).

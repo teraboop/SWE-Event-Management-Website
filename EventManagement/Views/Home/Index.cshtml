@@ -42,6 +42,23 @@
     </section>
 }
 
+@if (SignInManager.IsSignedIn(User))
+{
+    <section class="home-section" aria-labelledby="recommended-heading">
+        <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-3">
+            <h2 id="recommended-heading" class="section-title">Recommended for you</h2>
+            <a asp-controller="Profile" asp-action="Interests">Update your interests</a>
+        </div>
+        @* Filled in by assistant.js once the page has loaded, so a slow AI call doesn't hold up the page. *@
+        <div data-load-url="/recommendations" aria-live="polite">
+            <div class="recommendations-loading">
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                Finding events you'll love...
+            </div>
+        </div>
+    </section>
+}
+
 <section class="home-section" aria-labelledby="popular-heading">
     <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-3">
         <h2 id="popular-heading" class="section-title">Popular upcoming events</h2>

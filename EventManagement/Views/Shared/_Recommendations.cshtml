@@ -1,0 +1,53 @@
+@model EventManagement.Services.Ai.RecommendationsViewModel
+
+@* The body of the "Recommended for you" section, fetched from /recommendations after the page loads. *@
+@if (!Model.HasSignals)
+{
+    <div class="empty-state">
+        <p class="mb-2">Tell us what you're into and we'll recommend events and vendors for you.</p>
+        <a asp-controller="Profile" asp-action="Interests" class="btn btn-primary btn-sm">Choose your interests</a>
+    </div>
+}
+else if (Model.Events.Count == 0)
+{
+    <div class="empty-state">
+        <p class="mb-0">No new recommendations right now. You're already going to or saved everything that fits. Check back soon!</p>
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+        @foreach (var item in Model.Events)
+        {
+            <div class="col d-flex flex-column">
+                <p class="recommendation-reason">@item.Reason</p>
+                <div class="flex-grow-1">
+                    <partial name="~/Views/Events/_EventCard.cshtml" model="item.Card" />
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Model.Vendors.Count > 0)
+    {
+        <h3 class="h6 text-uppercase text-muted mt-4 mb-2">Vendors you might like</h3>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+            @foreach (var vendor in Model.Vendors)
+            {
+                <div class="col">
+                    <a class="recommended-vendor" asp-controller="Shop" asp-action="Vendor" asp-route-id="@vendor.VendorId">
+                        <span class="fw-semibold">@vendor.BusinessName</span>
+                        <span class="small text-muted">@vendor.ProductsOffered</span>
+                        <span class="recommendation-reason mb-0">@vendor.Reason</span>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+
+    <p class="small text-muted mt-3 mb-0">
+        @(Model.UsedAi
+            ? "Picked for you by AI from your interests, saved events, tickets and reviews."
+            : "Based on your interests and activity.")
+    </p>
+}

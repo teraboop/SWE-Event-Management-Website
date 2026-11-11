@@ -19,13 +19,15 @@ else
     <h1>@Model.Title</h1>
 }
 
-<partial name="_SaveEventButton"
-         model="@(new EventManagement.ViewModels.Events.SaveEventButtonViewModel
-         {
-             EventId = Model.Id,
-             IsSaved = Model.IsSaved,
-             ReturnUrl = Model.ReturnUrl
-         })" />
+<div class="event-actions">
+    <partial name="_SaveEventButton"
+             model="@(new EventManagement.ViewModels.Events.SaveEventButtonViewModel
+             {
+                 EventId = Model.Id,
+                 IsSaved = Model.IsSaved,
+                 ReturnUrl = Model.ReturnUrl
+             })" />
+</div>
 
 <p class="text-muted">
     @Model.StartsAt.LocalDateTime.ToString("MMMM d, yyyy h:mm tt")
