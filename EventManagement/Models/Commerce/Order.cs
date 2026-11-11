@@ -31,7 +31,16 @@ public class Order
 
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
 
+    /// <summary>What the buyer paid: the lines' total minus any rewards discount.</summary>
     public decimal TotalAmount { get; set; }
+
+    /// <summary>Discount from rewards points spent on this order.</summary>
+    public decimal RewardDiscount { get; set; }
+
+    public int PointsRedeemed { get; set; }
+
+    /// <summary>Points this order earned (on the amount paid).</summary>
+    public int PointsEarned { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 

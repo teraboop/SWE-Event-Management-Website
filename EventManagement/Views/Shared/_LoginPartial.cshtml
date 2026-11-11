@@ -3,6 +3,7 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject EventManagement.Services.CartService CartService
+@inject EventManagement.Services.RewardService RewardService
 
 <ul class="navbar-nav align-items-md-center gap-md-2">
 @if (SignInManager.IsSignedIn(User))
@@ -49,6 +50,15 @@
                        asp-controller="Orders"
                        asp-action="Index">
                         My orders
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item d-flex justify-content-between gap-3"
+                       asp-area=""
+                       asp-controller="Rewards"
+                       asp-action="Index">
+                        <span>My rewards</span>
+                        <span class="text-muted small">@(await RewardService.GetBalanceAsync(UserManager.GetUserId(User)!)) pts</span>
                     </a>
                 </li>
                 <li>

@@ -1,0 +1,115 @@
+@model EventManagement.ViewModels.Rewards.RewardsViewModel
+@using EventManagement.Models.Rewards
+@using EventManagement.Services
+
+@{
+    ViewData["Title"] = "My rewards";
+}
+
+<h1>My rewards</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <section class="rewards-balance h-100" aria-labelledby="balance-heading">
+            <h2 id="balance-heading" class="visually-hidden">Balance</h2>
+            <p class="rewards-balance-points mb-0">@Model.Points.ToString("N0")</p>
+            <p class="mb-2">points available</p>
+            <p class="small mb-0">
+                @if (Model.RedeemableValue > 0)
+                {
+                    <span>Worth @Model.RedeemableValue.ToString("C") off your next order.</span>
+                }
+                else
+                {
+                    <span>@(RewardService.PointsPerRedemption - Model.Points % RewardService.PointsPerRedemption) more to unlock @RewardService.RedemptionValue.ToString("C") off.</span>
+                }
+            </p>
+        </section>
+    </div>
+    <div class="col-md-6">
+        <section class="rewards-tier h-100" aria-labelledby="tier-heading">
+            <h2 id="tier-heading" class="h6 text-uppercase text-muted mb-1">Your tier</h2>
+            <p class="rewards-tier-name rewards-tier-@Model.Tier.Name.ToLowerInvariant() mb-2">@Model.Tier.Name</p>
+            @if (Model.NextTier is not null)
+            {
+                <div class="rewards-progress" role="progressbar" aria-label="Progress to @Model.NextTier.Name"
+                     aria-valuenow="@Model.NextTierPercent" aria-valuemin="0" aria-valuemax="100">
+                    <span style="width: @Model.NextTierPercent%"></span>
+                </div>
+                <p class="small text-muted mt-2 mb-0">
+                    @Model.PointsToNextTier.ToString("N0") more lifetime points to reach @Model.NextTier.Name.
+                </p>
+            }
+            else
+            {
+                <p class="small text-muted mb-0">You've reached the top tier. Thanks for being a regular!</p>
+            }
+            <p class="small text-muted mb-0">Lifetime points: @Model.LifetimePoints.ToString("N0")</p>
+        </section>
+    </div>
+</div>
+
+<section class="card mb-4" aria-labelledby="how-heading">
+    <div class="card-body">
+        <h2 id="how-heading" class="h5">How it works</h2>
+        <ul class="mb-0">
+            <li>Earn <strong>@RewardService.PointsPerDollar point for every $1</strong> you pay for tickets and merchandise.</li>
+            <li>Earn <strong>@RewardService.PointsPerReview points</strong> for reviewing an event you had tickets for (once per event).</li>
+            <li>At checkout, use <strong>@RewardService.PointsPerRedemption points for @RewardService.RedemptionValue.ToString("C") off</strong>.</li>
+            <li>
+                Tiers go by lifetime points:
+                @string.Join(", ", RewardService.Tiers.Select(tier => $"{tier.Name} ({tier.MinimumLifetimePoints:N0}+)")).
+                Spending points never lowers your tier.
+            </li>
+        </ul>
+    </div>
+</section>
+
+<h2 class="h4">History</h2>
+@if (Model.History.Count == 0)
+{
+    <p>
+        No points yet.
+        <a asp-controller="Events" asp-action="Index">Find an event</a> or
+        <a asp-controller="Shop" asp-action="Index">visit the shop</a> to start earning.
+    </p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Activity</th>
+                    <th scope="col" class="text-end">Points</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.History)
+                {
+                    <tr>
+                        <td class="text-nowrap">@item.CreatedAt.LocalDateTime.ToString("MMM d, yyyy")</td>
+                        <td>
+                            @if (item.OrderId is int orderId)
+                            {
+                                <a asp-controller="Orders" asp-action="Details" asp-route-id="@orderId">@item.Description</a>
+                            }
+                            else if (item.EventId is int eventId && item.Kind == RewardTransactionKind.Review)
+                            {
+                                <a asp-controller="Events" asp-action="Details" asp-route-id="@eventId" asp-fragment="reviews">@item.Description</a>
+                            }
+                            else
+                            {
+                                @item.Description
+                            }
+                        </td>
+                        <td class="text-end fw-semibold @(item.Points > 0 ? "text-success" : "text-danger")">
+                            @(item.Points > 0 ? "+" : "−")@Math.Abs(item.Points).ToString("N0")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

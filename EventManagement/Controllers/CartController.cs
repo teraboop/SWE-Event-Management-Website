@@ -13,13 +13,16 @@ public class CartController : Controller
 {
     private readonly CartService _cartService;
     private readonly CheckoutService _checkoutService;
+    private readonly RewardService _rewardService;
     private readonly UserManager<ApplicationUser> _userManager;
 
     public CartController(
         CartService cartService,
         CheckoutService checkoutService,
+        RewardService rewardService,
         UserManager<ApplicationUser> userManager)
     {
+        _rewardService = rewardService;
         _cartService = cartService;
         _checkoutService = checkoutService;
         _userManager = userManager;
@@ -96,20 +99,28 @@ public class CartController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        return View(cart);
+        var balance = await _rewardService.GetBalanceAsync(UserId, HttpContext.RequestAborted);
+
+        return View(new ViewModels.Rewards.CheckoutViewModel
+        {
+            Cart = cart,
+            PointsBalance = balance,
+            MaxRedeemablePoints = RewardService.MaxRedeemablePoints(balance, cart.Total)
+        });
     }
 
+    /// <param name="pointsToRedeem">Points to spend for a discount; 0 for none.</param>
     /// <param name="expectedTotal">The total shown on the checkout page, written with a "." decimal point.</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> PlaceOrder(string? expectedTotal)
+    public async Task<IActionResult> PlaceOrder(string? expectedTotal, int pointsToRedeem = 0)
     {
         if (!decimal.TryParse(expectedTotal, NumberStyles.Number, CultureInfo.InvariantCulture, out var total))
         {
             return RedirectToAction(nameof(Checkout));
         }
 
-        var result = await _checkoutService.PlaceOrderAsync(UserId, total, HttpContext.RequestAborted);
+        var result = await _checkoutService.PlaceOrderAsync(UserId, total, pointsToRedeem, HttpContext.RequestAborted);
 
         if (!result.Succeeded)
         {

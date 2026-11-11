@@ -162,6 +162,22 @@ namespace EventManagement.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int>("PointsEarned")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("PointsRedeemed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<decimal>("RewardDiscount")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)")
+                        .HasDefaultValue(0m);
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -179,6 +195,8 @@ namespace EventManagement.Data.Migrations
 
                     b.ToTable("Orders", null, t =>
                         {
+                            t.HasCheckConstraint("CK_Orders_Rewards_NonNegative", "[RewardDiscount] >= 0 AND [PointsRedeemed] >= 0 AND [PointsEarned] >= 0");
+
                             t.HasCheckConstraint("CK_Orders_TotalAmount_NonNegative", "[TotalAmount] >= 0");
                         });
                 });
@@ -837,6 +855,72 @@ namespace EventManagement.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EventManagement.Models.Rewards.RewardAccount", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("LifetimePoints")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("RewardAccounts", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RewardAccounts_Points", "[Points] >= 0 AND [LifetimePoints] >= [Points]");
+                        });
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Rewards.RewardTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("UserId", "EventId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_RewardTransactions_OneReviewAwardPerEvent")
+                        .HasFilter("[Kind] = 1");
+
+                    b.ToTable("RewardTransactions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RewardTransactions_Points_NonZero", "[Points] <> 0");
+                        });
+                });
+
             modelBuilder.Entity("EventManagement.Models.Vendors.VendorApplication", b =>
                 {
                     b.Property<int>("Id")
@@ -1454,6 +1538,28 @@ namespace EventManagement.Data.Migrations
                     b.Navigation("Author");
 
                     b.Navigation("Event");
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Rewards.RewardAccount", b =>
+                {
+                    b.HasOne("EventManagement.Data.ApplicationUser", "User")
+                        .WithOne()
+                        .HasForeignKey("EventManagement.Models.Rewards.RewardAccount", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EventManagement.Models.Rewards.RewardTransaction", b =>
+                {
+                    b.HasOne("EventManagement.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("EventManagement.Models.Vendors.VendorApplication", b =>

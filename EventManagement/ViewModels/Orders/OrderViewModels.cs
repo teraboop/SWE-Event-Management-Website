@@ -27,7 +27,16 @@ public class OrderDetailsViewModel
 
     public DateTimeOffset PlacedAt { get; set; }
 
+    /// <summary>What was paid, after any rewards discount.</summary>
     public decimal TotalAmount { get; set; }
+
+    public decimal RewardDiscount { get; set; }
+
+    public int PointsRedeemed { get; set; }
+
+    public int PointsEarned { get; set; }
+
+    public decimal Subtotal => TotalAmount + RewardDiscount;
 
     public IReadOnlyList<OrderTicketLineViewModel> TicketLines { get; set; } = [];
 

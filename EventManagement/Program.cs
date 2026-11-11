@@ -42,6 +42,7 @@ builder.Services.AddScoped<VendorProductService>();
 builder.Services.AddScoped<EventAnnouncementService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<CheckoutService>();
+builder.Services.AddScoped<RewardService>();
 builder.Services.TryAddSingleton(TimeProvider.System);
 
 // Store the sign-in encryption keys in the database (see ApplicationDbContext.DataProtectionKeys).
